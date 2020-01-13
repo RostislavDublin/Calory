@@ -10,9 +10,9 @@ zuul:
       url: auth-service #which url the request will e mapped to
       stripPrefix: true #if zuul should replace the "/auth/" segment
       sensitiveHeaders:
-    links-service:
-      path: /calory/**
-      serviceId: calory-service
+    calories-service:
+      path: /calories/**
+      serviceId: calories-service
       stripPrefix: true
       sensitiveHeaders:
     frontend-service:

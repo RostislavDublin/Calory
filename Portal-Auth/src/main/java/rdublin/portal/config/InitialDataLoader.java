@@ -101,7 +101,7 @@ public class InitialDataLoader implements ApplicationListener<ContextRefreshedEv
 
                 authClientRepository.save(clientDetails);
             }
-            authClientId = "calory-service";
+            authClientId = "calories-service";
             if (!authClientRepository.findByClientId(authClientId).isPresent()) {
                 AuthClientDetails clientDetails = new AuthClientDetails();
                 clientDetails.setClientId(authClientId);

@@ -1,0 +1,39 @@
+server:
+  port: 8084
+
+#CORS
+portal:
+  allow-origin:
+    - "http://localhost:8081"
+    - "http://localhost:8080"
+
+spring:
+  jpa:
+    database-platform: "org.hibernate.dialect.MySQL5InnoDBDialect"
+    hibernate:
+      ddl-auto: update
+  datasource:
+    url: "jdbc:mysql://${MYSQL_HOST:localhost}:3306/calory_portal_calories"
+    username: root
+    password: 123456Qw
+  generate-ddl: true
+  show-sql: true
+
+security:
+  oauth2:
+    client:
+      clientId: calories-service
+      clientSecret: secret
+      accessTokenUri: http://localhost:8080/oauth/oauth/token
+      grant-type: client_credentials
+      scope: server
+
+logging:
+  level:
+    org:
+      springframework:
+        web:
+          filter:
+            CommonsRequestLoggingFilter: TRACE
+        transaction:
+          interceptor: TRACE
