@@ -1,0 +1,94 @@
+plugins {
+    id "net.ltgt.apt" version "0.21" apply false
+    id "io.spring.dependency-management" version "1.0.8.RELEASE" apply false
+    id 'org.springframework.boot' version '2.2.1.RELEASE' apply false
+}
+
+allprojects {
+    apply plugin: 'idea'
+
+    group = 'org.rdublin'
+    version = '0.1.0'
+}
+
+ext {
+    springCloudVersion = 'Hoxton.RELEASE'
+}
+
+configure(subprojects.findAll { it.name != 'Portal-Infra' && it.name != 'Portal-Commons'}) {
+
+    repositories {
+        mavenLocal()
+        mavenCentral()
+        maven {
+            url "https://plugins.gradle.org/m2/"
+        }
+    }
+
+    apply plugin: "net.ltgt.apt"
+    apply plugin: 'java'
+    sourceCompatibility = '1.8'
+
+    apply plugin: 'org.springframework.boot'
+    apply plugin: 'io.spring.dependency-management'
+
+    //https://docs.spring.io/dependency-management-plugin/docs/current/reference/html/
+    dependencyManagement {
+        imports {
+            mavenBom org.springframework.boot.gradle.plugin.SpringBootPlugin.BOM_COORDINATES
+            mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
+        }
+    }
+
+    apply plugin: 'maven-publish'
+
+    configurations {
+        developmentOnly
+        runtimeClasspath {
+            extendsFrom developmentOnly
+        }
+        compileOnly {
+            extendsFrom annotationProcessor
+        }
+    }
+
+    dependencies {
+        compile 'org.springframework.boot:spring-boot-starter'
+
+        //config service (at least client)
+        implementation 'org.springframework.cloud:spring-cloud-starter-config'
+        compile group: 'org.springframework.retry', name: 'spring-retry'
+        compile group: 'org.springframework.boot', name: 'spring-boot-starter-aop'
+
+        implementation 'org.springframework.boot:spring-boot-starter-actuator'
+
+        compileOnly 'org.projectlombok:lombok'
+        annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
+        annotationProcessor 'org.projectlombok:lombok'
+//        developmentOnly 'org.springframework.boot:spring-boot-devtools'
+
+        testCompile group: 'junit', name: 'junit', version: '4.12'
+        testImplementation('org.springframework.boot:spring-boot-starter-test') {
+            exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
+        }
+        testImplementation 'org.springframework.security:spring-security-test'
+
+    }
+
+    publishing {
+        publications {
+            maven(MavenPublication) {
+                from(components.java)
+            }
+        }
+    }
+
+    tasks.withType(JavaCompile) {
+        options.encoding = 'UTF-8'
+    }
+
+    test {
+        useJUnitPlatform()
+    }
+
+}

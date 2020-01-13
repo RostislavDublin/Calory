@@ -1,0 +1,8 @@
+rootProject.name = 'Portal'
+include 'Portal-UI'
+include 'Portal-Auth'
+include 'Portal-Config'
+include 'Portal-Registry'
+include 'Portal-Gateway'
+include 'Portal-Commons'
+
