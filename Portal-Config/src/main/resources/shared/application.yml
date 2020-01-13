@@ -1,0 +1,28 @@
+# placeholder for eureka
+
+# placeholder for oauth
+
+# Actuator
+management:
+  metrics:
+    export:
+    prometheus:
+      enabled: true
+  endpoint:
+    metrics:
+      enabled: true
+    prometheus:
+      enabled: true
+    beans:
+      enabled: true
+    health:
+      show-details=always:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+
+http:
+  mappers:
+    jsonPrettyPrint=true:
+      
