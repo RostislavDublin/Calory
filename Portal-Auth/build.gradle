@@ -1,0 +1,19 @@
+dependencies {
+	implementation project(':Portal-Commons')
+	implementation 'org.springframework.boot:spring-boot-starter-web'
+	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+	implementation 'org.springframework.boot:spring-boot-starter-data-rest'
+
+	implementation 'org.springframework.boot:spring-boot-starter-security'
+	implementation 'org.springframework.cloud:spring-cloud-starter-oauth2'
+	implementation 'org.springframework.security:spring-security-jwt'
+
+	implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-client'
+
+	runtime 'mysql:mysql-connector-java:8.0.15'
+
+	compile 'io.jsonwebtoken:jjwt-api:0.10.7'
+	runtime 'io.jsonwebtoken:jjwt-impl:0.10.7'
+	runtime 'io.jsonwebtoken:jjwt-jackson:0.10.7'
+
+}

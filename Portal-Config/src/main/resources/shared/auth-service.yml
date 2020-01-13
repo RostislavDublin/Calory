@@ -1,0 +1,24 @@
+server:
+  port: 8082
+
+spring:
+  jpa:
+    database-platform: "org.hibernate.dialect.MySQL5InnoDBDialect"
+    hibernate:
+      ddl-auto: update
+  datasource:
+    url: "jdbc:mysql://${MYSQL_HOST:localhost}:3306/calory_portal_auth"
+    username: root
+    password: 123456Qw
+  generate-ddl: true
+  show-sql: true
+
+logging:
+  level:
+    org:
+      springframework:
+        web:
+          filter:
+            CommonsRequestLoggingFilter: TRACE
+        transaction:
+          interceptor: TRACE

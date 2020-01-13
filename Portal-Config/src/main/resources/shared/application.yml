@@ -5,7 +5,11 @@ eureka:
     serviceUrl:
       defaultZone: http://localhost:8761/eureka/ #where our registry server is located
 
-# placeholder for oauth
+security:
+  oauth2:
+    resource:
+      user-info-uri: http://localhost:8080/auth/oauth/userinfo
+      token-info-uri: http://localhost:8080/auth/oauth/check_token
 
 # Actuator
 management:
