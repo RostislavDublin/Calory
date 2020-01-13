@@ -1,4 +1,9 @@
-# placeholder for eureka
+eureka:
+  instance:
+    prefer-ip-address: false
+  client:
+    serviceUrl:
+      defaultZone: http://localhost:8761/eureka/ #where our registry server is located
 
 # placeholder for oauth
 
