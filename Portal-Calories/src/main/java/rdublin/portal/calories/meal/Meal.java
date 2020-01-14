@@ -14,10 +14,8 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
-import javax.persistence.Temporal;
-import javax.persistence.TemporalType;
-import javax.validation.constraints.NotNull;
-import java.util.Date;
+import java.time.LocalDate;
+import java.time.LocalTime;
 
 @Data
 @EqualsAndHashCode(callSuper = false)
@@ -36,14 +34,12 @@ public class Meal extends AuditedEntity {
     private Integer userId;
 
     @Column(name = "meal_date", nullable = false)
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd-MM-yyyy", timezone = "UTC")
-    @Temporal(TemporalType.DATE)
-    private Date mealDate;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd", timezone = "UTC")
+    private LocalDate mealDate;
 
     @Column(name = "meal_time", nullable = false)
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "HH:mm:ss")
-    @Temporal(TemporalType.TIME)
-    private Date mealTime;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "HH:mm")
+    private LocalTime mealTime;
 
     @Column(name = "meal", nullable = false, length = 128)
     private String meal;
