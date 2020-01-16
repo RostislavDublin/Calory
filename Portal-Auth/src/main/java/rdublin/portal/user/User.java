@@ -64,10 +64,4 @@ public class User extends AuditedEntity {
     )
     @JsonIgnore
     private Set<Role> roles;
-
-/*
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
-    @JsonIgnore
-    private Set<Link> links;
-*/
 }

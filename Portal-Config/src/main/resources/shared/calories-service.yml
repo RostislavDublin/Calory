@@ -28,7 +28,7 @@ security:
     client:
       clientId: calories-service
       clientSecret: secret
-      accessTokenUri: http://localhost:8080/oauth/oauth/token
+      accessTokenUri: http://localhost:8080/auth/oauth/token
       grant-type: client_credentials
       scope: server
 
@@ -41,6 +41,7 @@ logging:
             CommonsRequestLoggingFilter: TRACE
         transaction:
           interceptor: TRACE
+        security: DEBUG
       hibernate:
         SQL:
           TRACE

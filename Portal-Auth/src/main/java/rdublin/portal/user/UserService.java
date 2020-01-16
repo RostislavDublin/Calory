@@ -20,7 +20,7 @@ public interface UserService {
 
     User findById(int id);
 
-    UserDto update(UserDto userDto);
+    User update(UserDto userDto);
 
     User save(UserDto user);
 }

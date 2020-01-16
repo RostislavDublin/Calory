@@ -32,15 +32,15 @@ public class UserServiceImpl implements UserDetailsService, UserService {
     private BCryptPasswordEncoder bcryptEncoder;
 
     @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+    public UserDetailsImpl loadUserByUsername(String username) throws UsernameNotFoundException {
         User user = userRepository.findFirstByName(username);
         if (user == null) {
             throw new UsernameNotFoundException("Invalid username or password.");
         }
 
-        return new org.springframework.security.core.userdetails.User(
+        return new UserDetailsImpl(
                 user.getName(), user.getPassword(), true, true, true,
-                true, getAuthorities(user.getRoles()));
+                true, getAuthorities(user.getRoles()), user.getId());
     }
 
     @Override
@@ -83,16 +83,16 @@ public class UserServiceImpl implements UserDetailsService, UserService {
     }
 
     @Override
-    public UserDto update(UserDto userDto) {
+    public User update(UserDto userDto) {
         User user = findById(userDto.getId());
         if (user != null) {
             BeanUtils.copyProperties(userDto, user, "password");
             if (userDto.getPassword() != null) {
                 user.setPassword(bcryptEncoder.encode(user.getPassword()));
             }
-            userRepository.save(user);
+            user = userRepository.save(user);
         }
-        return userDto;
+        return user;
     }
 
     @Override
