@@ -1,26 +1,23 @@
-package rdublin.portal.config.auth_oauth2;
+package rdublin.portal.auth.oauth2;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.oauth2.config.annotation.configurers.ClientDetailsServiceConfigurer;
 import org.springframework.security.oauth2.config.annotation.web.configuration.AuthorizationServerConfigurerAdapter;
 import org.springframework.security.oauth2.config.annotation.web.configuration.EnableAuthorizationServer;
 import org.springframework.security.oauth2.config.annotation.web.configurers.AuthorizationServerEndpointsConfigurer;
 import org.springframework.security.oauth2.config.annotation.web.configurers.AuthorizationServerSecurityConfigurer;
-import org.springframework.security.oauth2.provider.token.AccessTokenConverter;
-import org.springframework.security.oauth2.provider.token.DefaultAccessTokenConverter;
-import org.springframework.security.oauth2.provider.token.DefaultUserAuthenticationConverter;
+import org.springframework.security.oauth2.provider.token.DefaultTokenServices;
 import org.springframework.security.oauth2.provider.token.TokenEnhancer;
 import org.springframework.security.oauth2.provider.token.TokenEnhancerChain;
 import org.springframework.security.oauth2.provider.token.TokenStore;
 import org.springframework.security.oauth2.provider.token.store.JwtAccessTokenConverter;
 import org.springframework.security.oauth2.provider.token.store.JwtTokenStore;
 import rdublin.portal.auth.AuthClientService;
-import rdublin.portal.user.UserService;
 
 import java.util.Arrays;
 
@@ -36,7 +33,7 @@ public class OAuth2AuthorizationServerConfig extends AuthorizationServerConfigur
     private AuthClientService authClientService;
 
     @Autowired
-    private AccessTokenConverter customAccessTokenConverter;
+    private PortalAccessTokenConverter customAccessTokenConverter;
 
     @Override
     public void configure(AuthorizationServerSecurityConfigurer oauthServer) throws Exception {
@@ -80,6 +77,14 @@ public class OAuth2AuthorizationServerConfig extends AuthorizationServerConfigur
     @Bean
     public TokenEnhancer tokenEnhancer() {
         return new CustomTokenEnhancer();
+    }
+
+    @Bean
+    @Primary
+    public DefaultTokenServices tokenServices() {
+        DefaultTokenServices defaultTokenServices = new DefaultTokenServices();
+        defaultTokenServices.setTokenStore(tokenStore());
+        return defaultTokenServices;
     }
 
 }

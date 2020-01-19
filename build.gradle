@@ -15,7 +15,7 @@ ext {
     springCloudVersion = 'Hoxton.RELEASE'
 }
 
-configure(subprojects.findAll { it.name != 'Portal-Infra' && it.name != 'Portal-Commons'}) {
+configure(subprojects.findAll { it.name != 'Portal-Infra'}) {
 
     repositories {
         mavenLocal()

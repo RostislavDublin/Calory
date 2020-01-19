@@ -24,7 +24,6 @@ import java.util.Set;
 
 @Data
 @EqualsAndHashCode(exclude = {"privileges", "users"})
-
 @Entity
 @Builder
 @NoArgsConstructor

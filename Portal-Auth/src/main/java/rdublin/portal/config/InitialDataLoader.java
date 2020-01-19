@@ -52,12 +52,12 @@ public class InitialDataLoader implements ApplicationListener<ContextRefreshedEv
 
             LOGGER.info("Create privileges");
             Privilege crudOwnUser = createPrivilegeIfNotFound("USER_OWN_CRUD_PRIVILEGE", "CRUD own user");
-            Privilege crudOwnCals = createPrivilegeIfNotFound("CALS_OWN_CRUD_PRIVILEGE", "CRUD own calories");
+            Privilege crudOwnMeal = createPrivilegeIfNotFound("MEAL_OWN_CRUD_PRIVILEGE", "CRUD own meal");
             Privilege crudAllUser = createPrivilegeIfNotFound("USER_ALL_CRUD_PRIVILEGE", "CRUD all users");
-            Privilege crudAllCals = createPrivilegeIfNotFound("CALS_ALL_CRUD_PRIVILEGE", "CRUD all calories");
+            Privilege crudAllMeal = createPrivilegeIfNotFound("MEAL_ALL_CRUD_PRIVILEGE", "CRUD all meal");
 
-            Set<Privilege> adminPrivileges = new HashSet<>(Arrays.asList(crudAllUser, crudAllCals));
-            Set<Privilege> userPrivileges = new HashSet<>(Arrays.asList(crudOwnUser, crudAllCals));
+            Set<Privilege> adminPrivileges = new HashSet<>(Arrays.asList(crudAllUser, crudAllMeal));
+            Set<Privilege> userPrivileges = new HashSet<>(Arrays.asList(crudOwnUser, crudOwnMeal));
             Set<Privilege> managerPrivileges = new HashSet<>(Arrays.asList(crudAllUser));
 
             LOGGER.info("Create roles");

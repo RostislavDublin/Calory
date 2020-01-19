@@ -16,8 +16,8 @@ import java.util.Date;
 @EntityListeners(AuditingEntityListener.class)
 @Data
 public class AuditedEntity {
-    @Column(name = "created_date", nullable = false, updatable = false,
-            columnDefinition = "datetime default('1970-01-01')")
+
+    @Column(name = "created_date", nullable = false, updatable = false)
     @CreatedDate
     private Date createdDate;
 

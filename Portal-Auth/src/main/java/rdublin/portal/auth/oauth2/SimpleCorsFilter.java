@@ -1,4 +1,4 @@
-package rdublin.portal.config.auth_oauth2;
+package rdublin.portal.auth.oauth2;
 
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;

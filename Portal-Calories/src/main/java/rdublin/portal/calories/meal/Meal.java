@@ -30,7 +30,7 @@ public class Meal extends AuditedEntity {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Integer id;
 
-    @Column(name = "user_id", nullable = false, updatable = false)
+    @Column(name = "user_id", nullable = false)
     private Integer userId;
 
     @Column(name = "meal_date", nullable = false)

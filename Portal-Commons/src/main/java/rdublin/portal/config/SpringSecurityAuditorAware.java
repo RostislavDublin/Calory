@@ -4,6 +4,7 @@ import org.springframework.data.domain.AuditorAware;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Optional;
 
@@ -15,6 +16,14 @@ public class SpringSecurityAuditorAware implements AuditorAware<String> {
                        .map(SecurityContext::getAuthentication)
                        .filter(Authentication::isAuthenticated)
                        .map(Authentication::getPrincipal)
-                       .map(p -> (String) p);
+                       .map(principal -> {
+                           String actor;
+                           if (principal instanceof UserDetails) {
+                               actor = ((UserDetails) principal).getUsername();
+                           } else {
+                               actor = (String) principal;
+                           }
+                           return actor;
+                       });
     }
 }

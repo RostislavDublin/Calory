@@ -1,29 +1,21 @@
-package rdublin.portal.config.auth_oauth2;
+package rdublin.portal.auth.oauth2;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.oauth2.provider.OAuth2Authentication;
 import org.springframework.security.oauth2.provider.token.DefaultAccessTokenConverter;
-import org.springframework.security.oauth2.provider.token.DefaultUserAuthenticationConverter;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
-import java.util.Arrays;
-import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+
+import static rdublin.portal.auth.oauth2.PortalAccessTokenClaims.FILTERED_CLAIMS_KEYS;
 
 /**
  * DefaultAccessTokenConverter used to set Authentication details to Null.
  * Let's create CustomAccessTokenConverter and set Authentication details with useful access token claims
  */
 @Component
-public class CustomAccessTokenConverter extends DefaultAccessTokenConverter {
-
-    private static final List<String> FILTERED_CLAIMS_KEYS = Arrays.asList(new String[]{"user_id", "user_name"});
-
-    @Autowired
-    UserDetailsService userService;
+public class PortalAccessTokenConverter extends DefaultAccessTokenConverter {
 
     @Override
     public OAuth2Authentication extractAuthentication(Map<String, ?> claims) {
@@ -42,9 +34,9 @@ public class CustomAccessTokenConverter extends DefaultAccessTokenConverter {
     @PostConstruct
     private void postConstruct() {
 
-        DefaultUserAuthenticationConverter duac = new DefaultUserAuthenticationConverter();
-        duac.setUserDetailsService(userService);
+        PortalUserAuthenticationConverter uac = new PortalUserAuthenticationConverter();
+        //uac.setUserDetailsService(userService);
 
-        this.setUserTokenConverter(duac);
+        this.setUserTokenConverter(uac);
     }
 }

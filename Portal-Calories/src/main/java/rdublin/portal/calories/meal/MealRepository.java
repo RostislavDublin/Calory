@@ -3,8 +3,6 @@ package rdublin.portal.calories.meal;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.PagingAndSortingRepository;
 import org.springframework.data.repository.query.Param;
-import org.springframework.data.rest.core.annotation.RepositoryRestResource;
-import org.springframework.data.rest.core.annotation.RestResource;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.lang.Nullable;
 
@@ -12,10 +10,8 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
 
-@RepositoryRestResource(path = "meals", collectionResourceRel = "meals")
 public interface MealRepository extends PagingAndSortingRepository<Meal, Integer> {
 
-    @RestResource
     List<Meal> findAllByUserId(Integer userId);
 
     @Query("select m from Meal m where (?1 is null or m.userId = ?1) and" +

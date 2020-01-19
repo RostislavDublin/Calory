@@ -12,7 +12,7 @@ public interface UserService {
     @Transactional
     Set<Privilege> getPrivileges(@NotNull Set<Role> roles);
 
-    List findAll();
+    List<User> findAll();
 
     void delete(int id);
 

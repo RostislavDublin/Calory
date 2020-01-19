@@ -4,8 +4,6 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -23,7 +21,7 @@ import java.util.stream.Stream;
 
 @Transactional
 @Service(value = "userService")
-public class UserServiceImpl implements UserDetailsService, UserService {
+public class UserServiceImpl implements PortalUserDetailsService, UserService {
 
     @Autowired
     private UserRepository userRepository;
@@ -32,13 +30,13 @@ public class UserServiceImpl implements UserDetailsService, UserService {
     private BCryptPasswordEncoder bcryptEncoder;
 
     @Override
-    public UserDetailsImpl loadUserByUsername(String username) throws UsernameNotFoundException {
+    public PortalUserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         User user = userRepository.findFirstByName(username);
         if (user == null) {
             throw new UsernameNotFoundException("Invalid username or password.");
         }
 
-        return new UserDetailsImpl(
+        return new PortalUserDetailsImpl(
                 user.getName(), user.getPassword(), true, true, true,
                 true, getAuthorities(user.getRoles()), user.getId());
     }
@@ -88,7 +86,7 @@ public class UserServiceImpl implements UserDetailsService, UserService {
         if (user != null) {
             BeanUtils.copyProperties(userDto, user, "password");
             if (userDto.getPassword() != null) {
-                user.setPassword(bcryptEncoder.encode(user.getPassword()));
+                user.setPassword(bcryptEncoder.encode(userDto.getPassword()));
             }
             user = userRepository.save(user);
         }

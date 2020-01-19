@@ -46,33 +46,39 @@ public class UserController {
     }
 
     @GetMapping("/{userId}")
-    @PreAuthorize("hasAuthority('USER_ALL_CRUD_PRIVILEGE') or #currentUser.userId == #userId")
-    public User getOne(@PathVariable int userId, @AuthenticationPrincipal UserDetailsImpl currentUser) {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        System.out.println(auth);
+    @PreAuthorize("hasAuthority('USER_ALL_CRUD_PRIVILEGE') " +
+            "or (hasAuthority('USER_OWN_CRUD_PRIVILEGE') and #currentUser.userId == #userId)")
+    public User getOne(@PathVariable int userId, @AuthenticationPrincipal PortalUserDetails currentUser) {
         return userService.findById(userId);
     }
 
     @GetMapping("/{userId}/privileges")
-    @PreAuthorize("hasAuthority('USER_ALL_CRUD_PRIVILEGE') or #currentUser.userId == #userId")
-    public Set<Privilege> getOnePrivileges(@PathVariable int userId) {
+    @PreAuthorize("hasAuthority('USER_ALL_CRUD_PRIVILEGE') " +
+            "or (hasAuthority('USER_OWN_CRUD_PRIVILEGE') and #currentUser.userId == #userId)")
+    public Set<Privilege> getOnePrivileges(@PathVariable int userId,
+                                           @AuthenticationPrincipal PortalUserDetails currentUser) {
         return userService.getPrivileges(userService.findById(userId).getRoles());
     }
 
-    @PutMapping("/{id}")
-    @PreAuthorize("hasAuthority('USER_ALL_CRUD_PRIVILEGE') or #currentUser.userId == #userId")
-    public User update(@RequestBody UserDto userDto) {
+    @PutMapping("/{userId}")
+    @PreAuthorize("hasAuthority('USER_ALL_CRUD_PRIVILEGE') " +
+            "or (hasAuthority('USER_OWN_CRUD_PRIVILEGE') and #currentUser.userId == #userId)")
+    public User update(@RequestBody UserDto userDto, @PathVariable int userId, @AuthenticationPrincipal
+            PortalUserDetails currentUser) {
+        userDto.setId(userId);
         return userService.update(userDto);
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/{userId}")
     @PreAuthorize("hasAuthority('USER_ALL_CRUD_PRIVILEGE')")
-    public void delete(@PathVariable int id) {
-        userService.delete(id);
+    public void delete(@PathVariable int userId) {
+        userService.delete(userId);
     }
 
     @GetMapping("/current")
-    public UserDetailsImpl user(@AuthenticationPrincipal UserDetailsImpl currentUser) {
+    public PortalUserDetails user(@AuthenticationPrincipal PortalUserDetails currentUser) {
+
+        ((PortalUserDetailsImpl) currentUser).eraseCredentials();
         return currentUser;
     }
 }
