@@ -14,6 +14,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
+import javax.persistence.Version;
 import java.time.LocalDate;
 import java.time.LocalTime;
 
@@ -26,6 +27,10 @@ import java.time.LocalTime;
 @AllArgsConstructor
 @Table(name = "meals")
 public class Meal extends AuditedEntity {
+
+    @Version
+    private int version;
+
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Integer id;

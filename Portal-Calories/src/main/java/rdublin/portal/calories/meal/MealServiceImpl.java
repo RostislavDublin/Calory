@@ -2,6 +2,7 @@ package rdublin.portal.calories.meal;
 
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -33,15 +34,19 @@ public class MealServiceImpl implements MealService {
     @Override
     public Meal update(MealDto mealDto) {
         Meal meal = findById(mealDto.getId());
-        if (meal != null) {
-            BeanUtils.copyProperties(mealDto, meal);
+        if (meal == null) {
+            throw new EmptyResultDataAccessException(
+                    String.format("No Meal entity with id %s exists!", mealDto.getId()), 1);
         }
+
+        BeanUtils.copyProperties(mealDto, meal);
         meal = mealRepository.save(meal);
+
         return meal;
     }
 
     @Override
-    public Meal save(MealDto mealDto) {
+    public Meal create(MealDto mealDto) {
         Meal newMeal = new Meal();
         BeanUtils.copyProperties(mealDto, newMeal, "id");
         return mealRepository.save(newMeal);

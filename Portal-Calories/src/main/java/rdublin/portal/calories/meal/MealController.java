@@ -2,10 +2,10 @@ package rdublin.portal.calories.meal;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.lang.Nullable;
-import org.springframework.security.access.prepost.PostAuthorize;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -19,7 +19,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 import rdublin.portal.user.PortalUserDetails;
-import rdublin.portal.user.PortalUserDetailsImpl;
 
 import java.sql.SQLIntegrityConstraintViolationException;
 import java.time.LocalDate;
@@ -44,7 +43,6 @@ public class MealController {
             @Nullable @DateTimeFormat(iso = DateTimeFormat.ISO.TIME) @RequestParam("timeTo") LocalTime timeTo,
             @AuthenticationPrincipal Object currentUser
     ) {
-        System.out.println(currentUser);
         return mealService.findAllByUserAndMealPeriod(userId, dateFrom, dateTo, timeFrom, timeTo);
     }
 
@@ -59,9 +57,9 @@ public class MealController {
     @PostMapping
     @PreAuthorize("hasAuthority('MEAL_ALL_CRUD_PRIVILEGE') " +
             "or (hasAuthority('MEAL_OWN_CRUD_PRIVILEGE') and #currentUser.userId == #meal.userId)")
-    public Meal saveUser(@RequestBody MealDto meal, @AuthenticationPrincipal Object currentUser) {
+    public Meal save(@RequestBody MealDto meal, @AuthenticationPrincipal Object currentUser) {
         try {
-            return mealService.save(meal);
+            return mealService.create(meal);
         } catch (DataIntegrityViolationException e) {
             SQLIntegrityConstraintViolationException ee = (SQLIntegrityConstraintViolationException) e.getRootCause();
             throw new ResponseStatusException(HttpStatus.CONFLICT, ee.getLocalizedMessage());
@@ -76,7 +74,12 @@ public class MealController {
     public Meal update(@RequestBody MealDto mealDto, @PathVariable int mealId,
                        @AuthenticationPrincipal PortalUserDetails currentUser) {
         mealDto.setId(mealId);
-        return mealService.update(mealDto);
+        try {
+            return mealService.update(mealDto);
+        } catch (EmptyResultDataAccessException e) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getLocalizedMessage());
+        }
+
     }
 
     @DeleteMapping("/{mealId}")
@@ -84,7 +87,12 @@ public class MealController {
             "or (hasAuthority('MEAL_OWN_CRUD_PRIVILEGE') " +
             "   and #currentUser.userId == @mealService.findById(#mealId).userId)")
     public void delete(@PathVariable int mealId, @AuthenticationPrincipal PortalUserDetails currentUser) {
-        mealService.delete(mealId);
+        try {
+            mealService.delete(mealId);
+        } catch (EmptyResultDataAccessException e) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getLocalizedMessage());
+        }
+
     }
 
 }

@@ -19,6 +19,7 @@ import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
+import javax.persistence.Version;
 import java.util.Collection;
 import java.util.Set;
 
@@ -33,6 +34,9 @@ import java.util.Set;
 })
 
 public class Role {
+
+    @Version
+    private int version;
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)

@@ -15,8 +15,8 @@ public interface MealService {
 
     Meal findById(int id);
 
-    Meal update(MealDto mealDto);
+    Meal update(MealDto meal);
 
-    Meal save(MealDto meal);
+    Meal create(MealDto meal);
 
 }

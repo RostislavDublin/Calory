@@ -95,3 +95,30 @@ Requires user to have MEAL_ALL_CRUD_PRIVILEGE authority or MEAL_OWN_CRUD_PRIVILE
 
 Requires user to have MEAL_ALL_CRUD_PRIVILEGE authority or MEAL_OWN_CRUD_PRIVILEGE (to delete Meal with own userId).
 
+## REST UserSetting CRUD operations
+
+### GET all UserSetting of all Users
+```curl localhost:8080/calories/userSettings/ -H "Authorization: Bearer $ACCESS_TOKEN"```
+
+Requires user to have MEAL_ALL_CRUD_PRIVILEGE authority.
+
+### GET UserSetting by User ID
+```curl localhost:8080/calories/userSettings/10 -H "Authorization: Bearer $ACCESS_TOKEN"```
+
+Requires user to have MEAL_ALL_CRUD_PRIVILEGE authority or MEAL_OWN_CRUD_PRIVILEGE (to request UserSetting with own userId).
+  
+### POST create UserSetting
+
+```curl localhost:8080/calories/userSettings -d'{"userId": 10, "caloriesExpected": 3000}' -H 'Content-Type: application/json' -H "Authorization: Bearer $ACCESS_TOKEN"```
+
+Requires user to have MEAL_ALL_CRUD_PRIVILEGE authority or MEAL_OWN_CRUD_PRIVILEGE (to create Meal with own userId).
+
+### PUT update UserSetting by User ID 
+```curl -X PUT localhost:8080/calories/userSettings/ -d'{"userId": 10, "caloriesExpected": 5000}'  -H 'Content-Type: application/json' -H "Authorization: Bearer $ACCESS_TOKEN"```
+
+Requires user to have MEAL_ALL_CRUD_PRIVILEGE authority or MEAL_OWN_CRUD_PRIVILEGE (to update Meal with own userId and without option to change userId).
+
+### DELETE UserSetting by UserId 
+```curl -X DELETE localhost:8080/calories/userSettings/10 -H "Authorization: Bearer $ACCESS_TOKEN"```
+
+Requires user to have MEAL_ALL_CRUD_PRIVILEGE authority or MEAL_OWN_CRUD_PRIVILEGE (to delete Meal with own userId).

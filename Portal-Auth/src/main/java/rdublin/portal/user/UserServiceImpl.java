@@ -14,7 +14,6 @@ import rdublin.portal.privelege.Role;
 import javax.validation.constraints.NotNull;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -76,15 +75,15 @@ public class UserServiceImpl implements PortalUserDetailsService, UserService {
 
     @Override
     public User findById(int id) {
-        Optional<User> optionalUser = userRepository.findById(id);
-        return optionalUser.isPresent() ? optionalUser.get() : null;
+        return userRepository.findById(id).orElse(null);
     }
 
     @Override
     public User update(UserDto userDto) {
         User user = findById(userDto.getId());
         if (user != null) {
-            BeanUtils.copyProperties(userDto, user, "password");
+            BeanUtils.copyProperties(userDto, user,
+                    "password", "createdDate", "modifiedDate", "createdBy", "modifiedBy");
             if (userDto.getPassword() != null) {
                 user.setPassword(bcryptEncoder.encode(userDto.getPassword()));
             }

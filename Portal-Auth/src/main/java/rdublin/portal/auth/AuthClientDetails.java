@@ -16,6 +16,7 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
+import javax.persistence.Version;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -33,6 +34,9 @@ import java.util.Set;
         @UniqueConstraint(name = "UK_auth_client_details_name", columnNames = {"client_id"})
 })
 public class AuthClientDetails implements ClientDetails {
+
+    @Version
+    private int version;
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
