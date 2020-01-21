@@ -1,0 +1,16 @@
+table {
+  width: 100%;
+}
+
+.selected-grayed {
+  background: lightgray
+}
+
+/*https://stackoverflow.com/questions/1457849/how-to-remove-the-border-highlight-on-an-input-text-element*/
+*:focus {
+  outline: none;
+}
+
+::ng-deep .highlight {
+  background: lightpink;
+}

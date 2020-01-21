@@ -1,0 +1,16 @@
+.vertical-layout-container {
+  display: flex;
+  flex-direction: column;
+}
+
+.misc-bottom-padding {
+  margin: 8px 0 20px;
+}
+
+.misc-bottom-padding mat-label {
+  margin-right: 15px;
+}
+
+.mat-radio-button {
+  margin: 0 15px 0 0;
+}

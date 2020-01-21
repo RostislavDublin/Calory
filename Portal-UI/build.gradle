@@ -1,0 +1,23 @@
+plugins {
+  id "com.moowork.node" version "1.2.0"
+}
+
+node {
+  version = '10.16.0'
+  npmVersion = '6.9.0'
+  download = true
+}
+
+dependencies {
+  compile 'org.springframework.boot:spring-boot-starter-web:2.1.4.RELEASE'
+  compile 'org.springframework.boot:spring-boot-starter-actuator:2.1.4.RELEASE'
+  testCompile 'org.springframework.boot:spring-boot-starter-test:2.1.4.RELEASE'
+
+  implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-client'
+}
+
+jar.dependsOn 'npm_run_build'
+
+jar {
+  from 'dist/Portal-UI' into 'static'
+}

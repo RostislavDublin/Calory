@@ -1,0 +1,83 @@
+<!-- Title group  -->
+<div fxLayout='column'>
+  <h1 class="mat-h1">{{crudTitle}}</h1>
+  <h4 *ngIf="user" class="mat-h4">id:{{user.id}}</h4>
+  <mat-divider fxFlex="1 0"></mat-divider>
+</div>
+
+<!-- Form -->
+<div fxLayout='column'>
+  <form [formGroup]="userForm" (ngSubmit)="submitUserForm()" novalidate fxLayout='column'>
+    <mat-card fxLayout='column'>
+      <!--Name-->
+      <mat-form-field>
+        <input matInput placeholder="User name" formControlName="name" autocomplete="new-name">
+        <mat-error *ngIf="handleError('name', 'required')">Required</mat-error>
+        <mat-error *ngIf="handleError('name', 'notUnique')">Not Unique</mat-error>
+      </mat-form-field>
+      <!--Email-->
+      <mat-form-field>
+        <input matInput type="email" placeholder="User email" formControlName="email" autocomplete="new-email">
+        <mat-error *ngIf="handleError('email', 'required')">Required</mat-error>
+        <mat-error *ngIf="handleError('email', 'email')">Invalid email pattern</mat-error>
+      </mat-form-field>
+      <!--DOB-->
+      <mat-form-field>
+        <input matInput [matDatepicker]="picker" placeholder="Date of birth" formControlName="dob">
+        <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+        <mat-datepicker #picker startView="multi-year" [startAt]="dobStartDate"></mat-datepicker>
+        <mat-error *ngIf="handleError('dob', 'required')">Date of birth is required</mat-error>
+        <mat-error *ngIf="handleError('dob', 'tooYoung')">Too young</mat-error>
+        <mat-error *ngIf="handleError('dob', 'tooOld')">Too old</mat-error>
+
+      </mat-form-field>
+      <!-- Gender -->
+      <div class="misc-bottom-padding">
+        <mat-label>Gender:</mat-label>
+        <mat-radio-group aria-label="Select an option" formControlName="gender">
+          <mat-radio-button value="Male">Male</mat-radio-button>
+          <mat-radio-button value="Female">Female</mat-radio-button>
+        </mat-radio-group>
+      </div>
+    </mat-card>
+    <mat-divider fxFlex="1 0"></mat-divider>
+    <mat-accordion>
+      <mat-expansion-panel #passwordPanel
+                           [expanded]="passwordPanelExpanded"
+                           [disabled]="crudMode !== 'U'"
+                           (opened)="setPasswordPanelExpanded(true)"
+                           (closed)="setPasswordPanelExpanded(false)">
+        <mat-expansion-panel-header>
+          <mat-panel-title>Password management</mat-panel-title>
+        </mat-expansion-panel-header>
+        <div class="vertical-layout-container">
+          <mat-form-field>
+            <input matInput type="password" placeholder="Set new password" formControlName="password"
+                   (input)="onPasswordInput()"
+                   autocomplete="new-password">
+            <mat-error *ngIf="password.hasError('required')">Password is required</mat-error>
+            <mat-error *ngIf="password.hasError('minlength')">Password must have at least {{minPasswordLength}}
+              characters
+            </mat-error>
+          </mat-form-field>
+          <mat-form-field>
+            <input matInput type="password" placeholder="Confirm password" formControlName="password2"
+                   (input)="onPasswordInput()" autocomplete="new-password">
+            <mat-error *ngIf="password2.hasError('required')">Please confirm your password</mat-error>
+            <mat-error *ngIf="password2.invalid && !password2.hasError('required')">Passwords don't match</mat-error>
+          </mat-form-field>
+        </div>
+      </mat-expansion-panel>
+    </mat-accordion>
+    <mat-divider fxFlex="1 0"></mat-divider>
+    <!-- Submit & Reset -->
+    <mat-card>
+      <div class="full-wrapper button-wrapper">
+        <div class="button-wrapper">
+          <button mat-flat-button color="warn" type="submit" [disabled]="!userForm.valid">Submit</button>
+          <button mat-flat-button color="grey" type="button" (click)="cancelDialog()">Cancel</button>
+        </div>
+      </div>
+    </mat-card>
+  </form>
+</div>
