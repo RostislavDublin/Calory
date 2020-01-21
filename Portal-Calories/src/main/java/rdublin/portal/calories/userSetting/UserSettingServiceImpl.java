@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import rdublin.portal.calories.meal.MealService;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,6 +17,9 @@ public class UserSettingServiceImpl implements UserSettingService {
     @Autowired
     UserSettingRepository userSettingRepository;
 
+    @Autowired
+    MealService mealService;
+
     @Override
     public List<UserSetting> findAll() {
 
@@ -26,11 +30,21 @@ public class UserSettingServiceImpl implements UserSettingService {
     }
 
     @Override
-    public void deleteById(int Id) {
-        userSettingRepository.deleteById(Id);
+    @Transactional
+    public void deleteById(int id) {
+        UserSetting userSetting = userSettingRepository.findById(id).orElse(null);
+        if (userSetting == null) {
+            throw new EmptyResultDataAccessException(
+                    String.format("No UserSetting entity with ID %s exists!", id), 1);
+        }
+
+        userSettingRepository.deleteById(id);
+
+        mealService.calcUserAllDaysExpectationsExceeded(userSetting.getUserId());
     }
 
     @Override
+    @Transactional
     public void deleteByUserId(int userId) {
         UserSetting userSetting = userSettingRepository.findByUserId(userId);
         if (userSetting == null) {
@@ -39,6 +53,8 @@ public class UserSettingServiceImpl implements UserSettingService {
         }
 
         userSettingRepository.delete(userSetting);
+
+        mealService.calcUserAllDaysExpectationsExceeded(userId);
     }
 
     @Override
@@ -52,6 +68,7 @@ public class UserSettingServiceImpl implements UserSettingService {
     }
 
     @Override
+    @Transactional
     public UserSetting provision(UserSettingDto userSettingDto) {
         UserSetting userSetting = findByUserId(userSettingDto.getUserId());
 
@@ -59,17 +76,30 @@ public class UserSettingServiceImpl implements UserSettingService {
             userSetting = UserSetting.builder().caloriesExpected(0).build();
         }
 
+        int oldCaloriesExpected = userSetting.getCaloriesExpected();
+
         BeanUtils.copyProperties(userSettingDto, userSetting, "id");
 
         userSetting = userSettingRepository.save(userSetting);
+
+        if (oldCaloriesExpected != userSetting.getCaloriesExpected()) {
+            mealService.calcUserAllDaysExpectationsExceeded(userSetting.getUserId());
+        }
 
         return userSetting;
     }
 
     @Override
+    @Transactional
     public UserSetting create(UserSettingDto userSettingDto) {
         UserSetting newUserSetting = new UserSetting();
         BeanUtils.copyProperties(userSettingDto, newUserSetting, "id");
-        return userSettingRepository.save(newUserSetting);
+        newUserSetting = userSettingRepository.save(newUserSetting);
+
+        if (newUserSetting.getCaloriesExpected() != 0) {
+            mealService.calcUserAllDaysExpectationsExceeded(newUserSetting.getUserId());
+        }
+
+        return newUserSetting;
     }
 }
