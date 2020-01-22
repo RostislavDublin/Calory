@@ -8,14 +8,19 @@
 <!-- Form -->
 <div fxLayout='column'>
   <form [formGroup]="crudForm" (ngSubmit)="submitCrudForm()" novalidate fxLayout='column'>
+    <!--<mat-error>{{crudForm.getControl("aaa")}}</mat-error>-->
     <mat-card fxLayout='column'>
       <!--Name-->
       <mat-form-field *ngFor="let fld of crudDialogConfig.fields">
-        <input matInput placeholder="{{fld.placeholder}}" formControlName="{{fld.id}}" autocomplete="new-name">
-        <!--
-                <mat-error *ngIf="handleError('name', 'required')">Required</mat-error>
-                <mat-error *ngIf="handleError('name', 'notUnique')">Not Unique</mat-error>
-        -->
+        <input matInput formControlName="{{fld.id}}"
+               type="{{fld.type}}"
+               placeholder="{{fld.placeholder}}"
+               autocomplete="new-name">
+        <ng-container *ngFor="let val of fld.validation">
+          <ng-container *ngFor="let err of val.errors">
+            <mat-error *ngIf="handleError(fld.id, err.errorName)">{{err.errorMessage}}</mat-error>
+          </ng-container>
+        </ng-container>
       </mat-form-field>
     </mat-card>
     <mat-divider fxFlex="1 0"></mat-divider>

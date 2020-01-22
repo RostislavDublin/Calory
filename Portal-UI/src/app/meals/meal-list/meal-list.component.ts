@@ -1,11 +1,11 @@
-import {ChangeDetectionStrategy, Component, OnInit} from '@angular/core';
+import {ChangeDetectionStrategy, Component} from '@angular/core';
 import {CrudListConfig} from '../../crud/crud-list/config/crud-list-config';
 import {MealService} from '../meal.service';
 import {Meal} from '../../model/meal';
 import {map} from "rxjs/operators";
 import {UserService} from "../../user/user.service";
-import {Observable} from "rxjs";
-import {CrudMode} from "../../crud/crud-mode.enum";
+import {Validators} from "@angular/forms";
+import {CrudDialogFieldConfig} from "../../crud/crud-dialog/config/crud-dialog-field-config";
 
 @Component({
   selector: 'app-meal-list',
@@ -13,7 +13,7 @@ import {CrudMode} from "../../crud/crud-mode.enum";
   styleUrls: ['./meal-list.component.css'],
   changeDetection: ChangeDetectionStrategy.Default,
 })
-export class MealListComponent implements OnInit {
+export class MealListComponent {
 
   meals: Meal[] = [];
   mealListConfig: CrudListConfig<Meal> = new CrudListConfig('Meal List', [
@@ -49,33 +49,41 @@ export class MealListComponent implements OnInit {
       return {'highlight': entry.userDayExpectationExceeded}
     }
 
-    this.mealListConfig.crudDialogConfig.fields = [
-      {id: 'id', name: 'Id', placeholder: 'Id'},
-      {id: 'userId', name: 'UserId', placeholder: 'UserId'},
-      {id: 'mealDate', name: 'Date', placeholder: 'Date'},
-      {id: 'mealTime', name: 'Date', placeholder: 'Time'},
-      {id: 'meal', name: 'Meal', placeholder: 'Name'},
-      {id: 'calories', name: 'Calories', placeholder: 'Calories'},
+    const dialogConfig = this.mealListConfig.crudDialogConfig;
+
+    dialogConfig.fields = [
+      new CrudDialogFieldConfig({id: 'id', placeholder: 'Id', disabled: true}),
+      new CrudDialogFieldConfig({id: 'userId', placeholder: 'UserId', disabled: true}),
+      new CrudDialogFieldConfig({
+        id: 'mealDate', placeholder: 'Date', type: 'date',
+        validation: [
+          {validator: Validators.required, errors: [{errorName: "required", errorMessage: "Required"}]}
+        ]
+      }),
+      new CrudDialogFieldConfig({
+        id: 'mealTime', placeholder: 'Time', type: 'time',
+        validation: [
+          {validator: Validators.required, errors: [{errorName: "required", errorMessage: "Required"}]}
+        ]
+      }),
+      new CrudDialogFieldConfig({
+        id: 'meal', placeholder: 'Name',
+        validation: [
+          {validator: Validators.required, errors: [{errorName: "required", errorMessage: "Required"}]}
+        ]
+      }),
+      new CrudDialogFieldConfig({
+        id: 'calories', placeholder: 'Calories', type: 'number',
+        validation: [
+          {validator: Validators.required, errors: [{errorName: "required", errorMessage: "Required"}]},
+          {validator: Validators.pattern("^[0-9]*$"), errors: [{errorName: "pattern", errorMessage: "Non-negative number required"}]},
+        ]
+      }),
     ];
 
-    this.mealListConfig.crudDialogConfig.submitter = (crudMode, whatToSubmit) => {
-      return new Observable((observer) => {
-        if (crudMode === CrudMode.Create) {
-          this.mealService.save(whatToSubmit).subscribe(data => observer.next(data), error => observer.next(error));
-        } else if (crudMode === CrudMode.Update) {
-          this.mealService.update(whatToSubmit).subscribe(data => observer.next(data), error => observer.next(error));
-        } else if (crudMode === CrudMode.Delete) {
-          this.mealService.delete(whatToSubmit).subscribe(data => observer.next(data), error => observer.next(error));
-        } else {
-          observer.next(true);
-        }
-      })
-    }
-
-  }
-
-  ngOnInit() {
-    console.log('Meal list onInit');
+    dialogConfig.createHandler = whatToSubmit => this.mealService.save(whatToSubmit);
+    dialogConfig.updateHandler = whatToSubmit => this.mealService.update(whatToSubmit);
+    dialogConfig.deleteHandler = whatToSubmit => this.mealService.delete(whatToSubmit);
   }
 
   onRefreshButtonClick() {

@@ -1,5 +1,5 @@
 import {Component, Inject, OnInit} from '@angular/core';
-import {FormBuilder, FormGroup} from '@angular/forms';
+import {FormBuilder, FormGroup, Validators} from '@angular/forms';
 import {MAT_DIALOG_DATA, MatDialogRef} from '@angular/material/dialog';
 import {CrudMode} from '../crud-mode.enum';
 import {CrudDialogConfig} from './config/crud-dialog-config';
@@ -41,8 +41,8 @@ export class CrudDialogComponent implements OnInit {
     const item = this.crudDialogConfig.item;
     for (const field of this.crudDialogConfig.fields) {
       const value = item ? item[field.id] : '';
-      const disabled = (this.crudDialogConfig.crudMode === CrudMode.Delete || this.crudDialogConfig.crudMode === CrudMode.Read);
-      controlsConfig[field.id] = [{value, disabled: disabled}];
+      const disabled = field.disabled || (this.crudDialogConfig.crudMode === CrudMode.Delete || this.crudDialogConfig.crudMode === CrudMode.Read);
+      controlsConfig[field.id] = [{value, disabled: disabled}, field.getValidators()];
     }
 
     this.crudForm = this.fb.group(controlsConfig, {});
@@ -94,8 +94,8 @@ export class CrudDialogComponent implements OnInit {
   /* Submit form (Create and Update) */
   submitCrudForm() {
     console.log('CrudDialog submitCrudForm');
-    if (this.crudForm.valid || this.crudDialogConfig.crudMode === CrudMode.Delete) {
-      const itemToSubmit = this.crudForm.value;
+    if (this.findInvalidControls().length === 0) {
+      const itemToSubmit = this.crudForm.getRawValue();
 
       this.crudDialogConfig.submitter(this.crudDialogConfig.crudMode, itemToSubmit).subscribe(this.submitDialogSubscriber);
 
