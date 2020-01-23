@@ -6,9 +6,11 @@ export class CrudDialogConfig {
   set deleteHandler(value: (whatToSubmit) => Observable<any>) {
     this._deleteHandler = value;
   }
+
   set updateHandler(value: (whatToSubmit) => Observable<any>) {
     this._updateHandler = value;
   }
+
   set createHandler(value: (whatToSubmit) => Observable<any>) {
     this._createHandler = value;
   }
@@ -59,7 +61,16 @@ export class CrudDialogConfig {
 
   setModeAndItem(mode: CrudMode, item: any): CrudDialogConfig {
     this._crudMode = mode;
-    this._item = item;
+    this._item = item ? item : {};
+
+    //set column default values on Create
+    if (mode === CrudMode.Create) {
+      this.fields.forEach(f => {
+        if (!this._item[f.id] && f.defaultValue) {
+          this._item[f.id] = f.defaultValue();
+        }
+      })
+    }
     return this;
   }
 

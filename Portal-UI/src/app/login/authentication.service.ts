@@ -16,6 +16,11 @@ export class AuthenticationService implements CanActivate {
   public static USER_AUTHORITIES_KEY = 'authenticatedUserAuthorities';
   public static JWT_TOKEN_KEY = 'authenticatedUserToken';
 
+  public static MEAL_OWN_CRUD_PRIVILEGE = 'MEAL_OWN_CRUD_PRIVILEGE'
+  public static MEAL_ALL_CRUD_PRIVILEGE = 'MEAL_ALL_CRUD_PRIVILEGE'
+  public static USER_OWN_CRUD_PRIVILEGE = 'USER_OWN_CRUD_PRIVILEGE'
+  public static USER_ALL_CRUD_PRIVILEGE = 'USER_ALL_CRUD_PRIVILEGE'
+
   // https://netbasal.com/angular-2-persist-your-login-status-with-behaviorsubject-45da9ec43243
   isLoginSubject = new BehaviorSubject<boolean>(this.isUserLoggedIn());
 
@@ -103,6 +108,19 @@ export class AuthenticationService implements CanActivate {
     return JSON.parse(authorities);
   }
 
+  isLoggedInHasAnyAuthority(...authority: string[]): boolean {
+    if (!this.isLoggedIn()) return false;
+
+    let hasAuth = false;
+    this.getLoggedInUserAuthorities().forEach(a => {
+      if (authority.indexOf(a) > -1) {
+        hasAuth = true;
+      }
+    })
+
+    return hasAuth;
+  }
+
   getLoggedInUserId(): number {
     const userId = sessionStorage.getItem(AuthenticationService.USER_ID_KEY);
     if (userId === null) {
@@ -115,15 +133,27 @@ export class AuthenticationService implements CanActivate {
     return this.isLoginSubject.asObservable();
   }
 
-  /**
-   * https://stackoverflow.com/questions/34331478/angular-redirect-to-login-page
-   */
   canActivate(route: ActivatedRouteSnapshot, state: RouterStateSnapshot) {
+    const path = route.url[0].path;
     if (this.isUserLoggedIn()) {
-      return true;
+
+      if (path === 'users') {
+        if (this.isLoggedInHasAnyAuthority(
+          AuthenticationService.USER_ALL_CRUD_PRIVILEGE))
+          return true;
+      } else if (path === 'meals') {
+        if (this.isLoggedInHasAnyAuthority(
+          AuthenticationService.MEAL_ALL_CRUD_PRIVILEGE,
+          AuthenticationService.MEAL_OWN_CRUD_PRIVILEGE))
+          return true;
+      } else {
+        return true;
+      }
+    } else {
+      // not logged in so redirect to login page with the return url
+      this.router.navigate(['/login'], {queryParams: {returnUrl: state.url}});
     }
-    // not logged in so redirect to login page with the return url
-    this.router.navigate(['/login'], {queryParams: {returnUrl: state.url}});
+
     return false;
   }
 }

@@ -5,7 +5,6 @@ import {Meal} from '../model/meal';
 import {AuthenticationService} from '../login/authentication.service';
 import {environment} from '../../environments/environment';
 import {map} from 'rxjs/operators';
-import {User} from "../model/user";
 
 @Injectable({
   providedIn: 'root'
@@ -18,13 +17,31 @@ export class MealService {
     private authenticationService: AuthenticationService) {
   }
 
-  getMeals(): Observable<Meal[]> {
-    return this.http.get<any>(this.mealsUrl)
+  getMeals(filterValues?: Map<string, any>): Observable<Meal[]> {
+    let params = new HttpParams();
+    if (filterValues) {
+      if (filterValues.get('userId'))
+        params = params.set('userId', filterValues.get('userId'));
+      if (filterValues.get('dateFrom')) {
+        params = params.set('dateFrom', filterValues.get('dateFrom'));
+      }
+      if (filterValues.get('dateTo')) {
+        params = params.set('dateTo', filterValues.get('dateTo'));
+      }
+      if (filterValues.get('timeFrom')) {
+        params = params.set('timeFrom', filterValues.get('timeFrom'));
+      }
+      if (filterValues.get('timeTo')) {
+        params = params.set('timeTo', filterValues.get('timeTo'));
+      }
+    }
+    return this.http.get<any>(this.mealsUrl, {params: params})
       .pipe(map(w => {
         const meals: Meal[] = w;
         return meals;
       }));
   }
+
   getCurrentUserMeals(): Observable<Meal[]> {
     const currentUserId = this.authenticationService.getLoggedInUserId();
     const params = new HttpParams().set('userId', currentUserId.toString());

@@ -40,7 +40,7 @@ export class CrudDialogComponent implements OnInit {
     const controlsConfig = {};
     const item = this.crudDialogConfig.item;
     for (const field of this.crudDialogConfig.fields) {
-      const value = item ? item[field.id] : '';
+      const value = (item && item[field.id]) ? item[field.id] : '';
       const disabled = field.disabled || (this.crudDialogConfig.crudMode === CrudMode.Delete || this.crudDialogConfig.crudMode === CrudMode.Read);
       controlsConfig[field.id] = [{value, disabled: disabled}, field.getValidators()];
     }

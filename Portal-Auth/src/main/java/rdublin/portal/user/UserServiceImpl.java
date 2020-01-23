@@ -10,9 +10,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import rdublin.portal.privelege.Privilege;
 import rdublin.portal.privelege.Role;
+import rdublin.portal.privelege.RoleRepository;
 
 import javax.validation.constraints.NotNull;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -24,6 +26,9 @@ public class UserServiceImpl implements PortalUserDetailsService, UserService {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    RoleRepository roleRepository;
 
     @Autowired
     private BCryptPasswordEncoder bcryptEncoder;
@@ -93,11 +98,14 @@ public class UserServiceImpl implements PortalUserDetailsService, UserService {
     }
 
     @Override
-    public User save(UserDto user) {
+    @Transactional
+    public User create(UserDto user) {
         User newUser =
                 User.builder().name(user.getName()).email(user.getEmail())
                     .dob(user.getDob()).gender(user.getGender())
-                    .password(bcryptEncoder.encode(user.getPassword())).build();
+                    .password(bcryptEncoder.encode(user.getPassword()))
+                    .roles(Collections.singleton(roleRepository.findByName("ROLE_REGULAR_USER")))
+                    .build();
         return userRepository.save(newUser);
     }
 }

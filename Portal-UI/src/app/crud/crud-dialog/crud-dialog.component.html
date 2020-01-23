@@ -11,7 +11,9 @@
     <!--<mat-error>{{crudForm.getControl("aaa")}}</mat-error>-->
     <mat-card fxLayout='column'>
       <!--Name-->
-      <mat-form-field *ngFor="let fld of crudDialogConfig.fields">
+      <mat-form-field *ngFor="let fld of crudDialogConfig.fields"
+                      [ngClass]=fld.getInputClass()
+      >
         <input matInput formControlName="{{fld.id}}"
                type="{{fld.type}}"
                placeholder="{{fld.placeholder}}"

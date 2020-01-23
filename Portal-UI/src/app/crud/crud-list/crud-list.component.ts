@@ -1,4 +1,4 @@
-import {ChangeDetectionStrategy, Component, Input, OnInit, ViewChild} from '@angular/core';
+import {ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnInit, ViewChild} from '@angular/core';
 import {CrudListConfig} from './config/crud-list-config';
 import {MatTable, MatTableDataSource} from '@angular/material/table';
 import {MatPaginator} from '@angular/material/paginator';
@@ -9,7 +9,6 @@ import {MatDialog, MatDialogConfig} from '@angular/material/dialog';
 import {CrudDialogComponent} from '../crud-dialog/crud-dialog.component';
 import {CrudDialogConfig} from '../crud-dialog/config/crud-dialog-config';
 import {CrudMode} from '../crud-mode.enum';
-import {Meal} from "../../model/meal";
 
 @Component({
   selector: 'app-crud-list',
@@ -21,6 +20,7 @@ export class CrudListComponent<T> implements OnInit {
 
   constructor(
     public dialog: MatDialog,
+    private cdref: ChangeDetectorRef
   ) {
     console.log('CRUD list constructor');
   }
@@ -34,8 +34,6 @@ export class CrudListComponent<T> implements OnInit {
   @ViewChild(MatPaginator, {static: true}) paginator: MatPaginator;
   @ViewChild(MatSort, {static: true}) sort: MatSort;
   selection = new SelectionModel<T>(false, []);
-
-  filtersValues = {};
 
   @ViewChild(MatMenuTrigger, {static: false})
   contextMenu: MatMenuTrigger;
@@ -53,13 +51,27 @@ export class CrudListComponent<T> implements OnInit {
     this.config.requestAsyncDataFromSupplier();
 
     this.dataSource.sort = this.sort;
-    this.dataSource.filterPredicate = this.config.filterPredicate();
+    this.dataSource.filterPredicate = this.config.clientFilterPredicate();
   }
 
   applyFilter(columnId: string, filterValue: string) {
-    this.filtersValues[columnId] = filterValue.trim().toLowerCase();
-    this.dataSource.filter = JSON.stringify(this.filtersValues);
+
+    this.config.setFilterValue(columnId, filterValue.toString().trim().toLowerCase());
+
+    const clientFiltersValues = {};
+    for (const entry of this.config.getFilterValues().entries()) {
+      if (this.config.getFilterById(entry[0]).execution === 'client') {
+        clientFiltersValues[entry[0]] = entry[1];
+      }
+    }
+
+    this.dataSource.filter = JSON.stringify(clientFiltersValues);
+
+    console.log("Client filters data" + this.dataSource.filter);
+
+    this.config.requestAsyncDataFromSupplier();
     this.paginator.firstPage();
+
   }
 
   /**
@@ -98,6 +110,10 @@ export class CrudListComponent<T> implements OnInit {
   onContextMenuDeleteItem(data: T) {
     console.log('Delete item: ' + JSON.stringify(data));
     this.openCrudDialog(CrudMode.Delete, data);
+  }
+
+  ngAfterContentChecked() {
+    this.cdref.detectChanges();
   }
 
 }

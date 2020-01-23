@@ -1,9 +1,10 @@
 import {Injectable} from '@angular/core';
 import {HttpClient} from '@angular/common/http';
-import {Observable} from 'rxjs';
+import {EMPTY, Observable} from 'rxjs';
 import {User} from '../model/user';
 import {environment} from '../../environments/environment';
-import {publishReplay, refCount} from "rxjs/operators";
+import {map, publishReplay, refCount} from "rxjs/operators";
+import {AuthenticationService} from "../login/authentication.service";
 
 @Injectable({
   providedIn: 'root'
@@ -14,7 +15,10 @@ export class UserService {
 
   private usersUrl: string;
 
-  constructor(private http: HttpClient) {
+  constructor(
+    private http: HttpClient,
+    private authenticationService: AuthenticationService
+  ) {
     this.usersUrl = environment.apiGatewayUrl + '/auth/users';
   }
 
@@ -50,6 +54,17 @@ export class UserService {
     }
 
     return cachedUser.user;
+  }
+
+  getUsersAccessibleToLoggedInUser(): Observable<User[]> {
+    if (!this.authenticationService.isLoggedIn()) {
+      return EMPTY;
+    } else if (this.authenticationService.getLoggedInUserAuthorities().indexOf(AuthenticationService.USER_ALL_CRUD_PRIVILEGE) > -1) {
+      return this.getUsers();
+    } else if (this.authenticationService.getLoggedInUserAuthorities().indexOf(AuthenticationService.USER_OWN_CRUD_PRIVILEGE) > -1) {
+      return this.getUserById(this.authenticationService.getLoggedInUserId()).pipe(map(u => [u]));
+    }
+    return EMPTY;
   }
 }
 

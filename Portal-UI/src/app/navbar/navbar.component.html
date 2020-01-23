@@ -9,13 +9,10 @@
   </div>
   <div fxFlex fxLayoutAlign="start" fxHide.xs>
     <ul fxLayout fxLayoutGap="35px" class="navigation-items">
-      <li>
-        <a routerLink="/">Home</a>
-      </li>
-      <li>
+      <li *ngIf="auth.isLoggedInHasAnyAuthority(AUTH.USER_ALL_CRUD_PRIVILEGE)">
         <a routerLink="/users">Users</a>
       </li>
-      <li>
+      <li *ngIf="auth.isLoggedInHasAnyAuthority(AUTH.MEAL_ALL_CRUD_PRIVILEGE, AUTH.MEAL_OWN_CRUD_PRIVILEGE)">
         <a routerLink="/meals">Meals</a>
       </li>
     </ul>
@@ -25,6 +22,9 @@
       <li *ngIf="!auth.isUserLoggedIn()">
         <a routerLink="/login">Login</a>
       </li>
+      <li *ngIf="!auth.isUserLoggedIn()">
+        <a routerLink (click)="register()">Register</a>
+      </li>
       <li *ngIf="auth.isUserLoggedIn()">
         <button mat-button [matMenuTriggerFor]="contextMenu">{{auth.getLoggedInUserName()}}</button>
       </li>
@@ -33,7 +33,7 @@
 </mat-toolbar>
 <mat-menu #contextMenu="matMenu">
   <ng-template matMenuContent let-item="user">
-    <button mat-menu-item>Profile</button>
+    <button mat-menu-item (click)="editProfile()">Profile</button>
     <button mat-menu-item (click)="auth.logout()">Logout</button>
   </ng-template>
 </mat-menu>

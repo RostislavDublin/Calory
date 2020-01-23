@@ -6,6 +6,7 @@ export class CrudDialogFieldConfig {
   type?: string = 'text';
   disabled?: boolean = false
   validation?: { validator: Validators, errors: [{ errorName: string, errorMessage: string }] }[] = [];
+  defaultValue?: () => any = () => ''
 
   public getValidators(): Validators[] {
     const validators: Validators[] = [];
@@ -24,11 +25,23 @@ export class CrudDialogFieldConfig {
   constructor(construct: {
     id: string, placeholder: string, type?: string, disabled?: boolean,
     validation?: Array<{ validator: Validators, errors: [{ errorName: string, errorMessage: string }] }>
+    defaultValue?: () => string,
+    inputClass?: () => string
   }) {
     this.id = construct.id;
     this.placeholder = construct.placeholder;
     this.type = (construct.type ? construct.type : 'text');
     this.disabled = (construct.disabled ? construct.disabled : false);
     this.validation = (construct.validation ? construct.validation : []);
+    this.defaultValue = construct.defaultValue;
+    this.inputClass = construct.inputClass
   }
+
+  inputClass: () => {};
+
+  getInputClass(): {} {
+    return (this.inputClass ? this.inputClass() : '');
+  }
+
+
 }

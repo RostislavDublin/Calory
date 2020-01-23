@@ -6,6 +6,11 @@ import {map} from "rxjs/operators";
 import {UserService} from "../../user/user.service";
 import {Validators} from "@angular/forms";
 import {CrudDialogFieldConfig} from "../../crud/crud-dialog/config/crud-dialog-field-config";
+import {CrudListColumnConfig} from "../../crud/crud-list/config/crud-list-column-config";
+import {formatDate} from "@angular/common";
+import {CrudListFilterConfig} from "../../crud/crud-list/config/crud-list-filter-config";
+import {AuthenticationService} from "../../login/authentication.service";
+import {User} from "../../model/user";
 
 @Component({
   selector: 'app-meal-list',
@@ -15,28 +20,66 @@ import {CrudDialogFieldConfig} from "../../crud/crud-dialog/config/crud-dialog-f
 })
 export class MealListComponent {
 
+  dateFormatter = (v) => formatDate(v, 'MM/dd/yyyy', 'en-US');
+
   meals: Meal[] = [];
-  mealListConfig: CrudListConfig<Meal> = new CrudListConfig('Meal List', [
-      {id: 'id', name: 'Id'},
-      //{id: 'userId', name: 'UserId'},
-      {id: 'userName', name: 'User Name'},
-      {id: 'mealDate', name: 'Date', filter: true},
-      {id: 'mealTime', name: 'Time', filter: true},
-      {id: 'meal', name: 'Meal', filter: true},
-      {id: 'calories', name: 'Calories', filter: true},
-    ],
-    this.meals
+  usersFilterOptions = {};
+
+  mealListConfig: CrudListConfig<Meal> = new CrudListConfig({
+      listTitle: 'Meal List',
+      columns: [
+        new CrudListColumnConfig({id: 'id', name: 'Id'}),
+        //{id: 'userId', name: 'UserId'},
+        new CrudListColumnConfig({id: 'userName', name: 'User Name'}),
+        new CrudListColumnConfig({id: 'mealDate', name: 'Date', formatter: this.dateFormatter}),
+        new CrudListColumnConfig({id: 'mealTime', name: 'Time'}),
+        new CrudListColumnConfig({id: 'meal', name: 'Meal'}),
+        new CrudListColumnConfig({id: 'calories', name: 'Calories'}),
+      ],
+      filters: [
+        new CrudListFilterConfig({
+            id: 'userId', name: 'User', inputType: 'select',
+            initialValue: this.authenticationService.getLoggedInUserId(),
+            optionsData: this.usersFilterOptions
+          }
+        ),
+        new CrudListFilterConfig({
+          id: 'dateFrom', name: 'Start Date',
+          inputType: 'date',
+          initialValue: '2020-01-01'
+        }),
+        new CrudListFilterConfig({id: 'dateTo', name: 'End Date', inputType: 'date'}),
+        new CrudListFilterConfig({id: 'timeFrom', name: 'Start Time', inputType: 'time'}),
+        new CrudListFilterConfig({id: 'timeTo', name: 'End Time', inputType: 'time'}),
+      ],
+      data: this.meals
+    }
   );
 
+
+  //this.userService.getUsersAccessibleToLoggedInUser().toPromise().then(r => {});
+
   constructor(
+    private authenticationService: AuthenticationService,
     private mealService: MealService,
     private userService: UserService
   ) {
     console.log('Meal list in Constructor');
 
+    //populate User filter options
+    if (authenticationService.isLoggedInHasAnyAuthority(AuthenticationService.MEAL_ALL_CRUD_PRIVILEGE)) {
+      userService.getUsersAccessibleToLoggedInUser().toPromise().then(users => {
+        users.forEach(u => {
+          this.usersFilterOptions[u.id] = u.name
+        });
+      })
+    } else {
+      this.usersFilterOptions[authenticationService.getLoggedInUserId()] = authenticationService.getLoggedInUserName()
+    }
+
     this.mealListConfig.itemName = "Meal";
-    this.mealListConfig.asyncDataSupplier = () => {
-      return mealService.getMeals().pipe(map(mm => {
+    this.mealListConfig.asyncDataSupplier = (filterValues) => {
+      return mealService.getMeals(filterValues).pipe(map(mm => {
         mm.forEach(m => {
           userService.getUserById(m['userId']).toPromise().then(n => m['userName'] = n.name);
         })
@@ -52,8 +95,28 @@ export class MealListComponent {
     const dialogConfig = this.mealListConfig.crudDialogConfig;
 
     dialogConfig.fields = [
-      new CrudDialogFieldConfig({id: 'id', placeholder: 'Id', disabled: true}),
-      new CrudDialogFieldConfig({id: 'userId', placeholder: 'UserId', disabled: true}),
+      //Meal record Id
+      new CrudDialogFieldConfig({id: 'id', placeholder: 'Id', disabled: true, inputClass: () => 'invisible'}),
+      //User Id
+      new CrudDialogFieldConfig({
+        id: 'userId', placeholder: 'UserId', disabled: true,
+        defaultValue: () => {
+          //take currently chosen in the User Filter
+          return this.mealListConfig.getFilterValue("userId")
+        }
+      }),
+      //User Name
+      new CrudDialogFieldConfig({
+        id: 'userName', placeholder: 'User', disabled: true,
+        defaultValue: () => {
+          //take currently chosen in the User Filter
+          const userId = this.mealListConfig.getFilterValue("userId");
+          //... and show his name (take it from the User Filter options list
+          return userId
+            ? this.mealListConfig.getFilterById('userId').optionsData[userId]
+            : authenticationService.getLoggedInUserName();
+        }
+      }),
       new CrudDialogFieldConfig({
         id: 'mealDate', placeholder: 'Date', type: 'date',
         validation: [
@@ -76,7 +139,10 @@ export class MealListComponent {
         id: 'calories', placeholder: 'Calories', type: 'number',
         validation: [
           {validator: Validators.required, errors: [{errorName: "required", errorMessage: "Required"}]},
-          {validator: Validators.pattern("^[0-9]*$"), errors: [{errorName: "pattern", errorMessage: "Non-negative number required"}]},
+          {
+            validator: Validators.pattern("^[0-9]*$"),
+            errors: [{errorName: "pattern", errorMessage: "Non-negative number required"}]
+          },
         ]
       }),
     ];
