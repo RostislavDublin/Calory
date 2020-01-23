@@ -38,7 +38,7 @@
 
 ## Repository
 Please use this private repository to version-control your code:
-- https://git.toptal.com/screening/rostislav-dublin
+- [Repository address](https://git.toptal.com/screening/rostislav-dublin)
 - Username: javaisforever@gmail.com 
 
 ## Helpful take-home project guidelines:

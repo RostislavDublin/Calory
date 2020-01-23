@@ -27,10 +27,24 @@ get daily consumption details and statistics and be noticed about the consumptio
                 - current user profile self edit dialog;
             - Logout
                 - logout option
-         
-### User security privileges available
+### Security, Authentication and Authorization         
+#### User security privileges predefined
+- USER_OWN_CRUD_PRIVILEGE - allows user to CRUD own user profile data
+- MEAL_OWN_CRUD_PRIVILEGE - allows user to CRUD own meal records
+- USER_ALL_CRUD_PRIVILEGE - allows user to CRUD all users' profiles data
+- MEAL_ALL_CRUD_PRIVILEGE - allows user to CRUD all users' meal records
 
-### User roles available
-- Admin 
-- Manager
-- Regular User 
+#### User roles (and their privileges) predefined
+- ROLE_ADMIN - Admin with full access, has:
+    - USER_ALL_CRUD_PRIVILEGE, 
+    - MEAL_ALL_CRUD_PRIVILEGE 
+- ROLE_USER_MANAGER - Manager with full access to all users' profiles
+    - USER_ALL_CRUD_PRIVILEGE
+- ROLE_REGULAR_USER - Regular User with access to only own user profile and meal data 
+    - USER_OWN_CRUD_PRIVILEGE
+    - MEAL_OWN_CRUD_PRIVILEGE
+    
+#### User accounts predefined
+- Admin. Password: password. 
+- Manager. Password: password. 
+- TestUser. Password: password.      
