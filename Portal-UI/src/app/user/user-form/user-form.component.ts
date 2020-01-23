@@ -110,7 +110,7 @@ export class UserFormComponent implements OnInit {
         const dob: Date = new Date(this.user.dob);
         this.set('dob', dob);
         this.set('gender', this.user.gender);
-        this.set('caloriesExpected', (userSettings.caloriesExpected ? userSettings.caloriesExpected : 0));
+        this.set('caloriesExpected', ((userSettings && userSettings.caloriesExpected) ? userSettings.caloriesExpected : 0));
       })
   }
 
