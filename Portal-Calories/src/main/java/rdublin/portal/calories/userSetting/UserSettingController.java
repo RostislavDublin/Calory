@@ -28,22 +28,23 @@ public class UserSettingController {
     UserSettingService userSettingService;
 
     @GetMapping
-    @PreAuthorize("hasAuthority('MEAL_ALL_CRUD_PRIVILEGE')")
+    @PreAuthorize("hasAnyAuthority('MEAL_ALL_CRUD_PRIVILEGE', 'USER_ALL_CRUD_PRIVILEGE')")
     public List<UserSetting> findAll() {
         return userSettingService.findAll();
     }
 
     @GetMapping("/{userId}")
-    @PreAuthorize("hasAuthority('MEAL_ALL_CRUD_PRIVILEGE') " +
-            "or (hasAuthority('MEAL_OWN_CRUD_PRIVILEGE') " +
-            "   and #currentUser.userId == @userSettingService.findByUserId(#userId).userId)")
+    @PreAuthorize("hasAnyAuthority('MEAL_ALL_CRUD_PRIVILEGE','USER_ALL_CRUD_PRIVILEGE') " +
+            "or (hasAnyAuthority('MEAL_OWN_CRUD_PRIVILEGE','USER_OWN_CRUD_PRIVILEGE') " +
+            "   and #currentUser.userId == #userId)")
     public UserSetting getOne(@PathVariable int userId, @AuthenticationPrincipal PortalUserDetails currentUser) {
         return userSettingService.findByUserId(userId);
     }
 
     @PostMapping
-    @PreAuthorize("hasAuthority('MEAL_ALL_CRUD_PRIVILEGE') " +
-            "or (hasAuthority('MEAL_OWN_CRUD_PRIVILEGE') and #currentUser.userId == #userSetting.userId)")
+    @PreAuthorize("hasAnyAuthority('MEAL_ALL_CRUD_PRIVILEGE','USER_ALL_CRUD_PRIVILEGE') " +
+            "or (hasAnyAuthority('MEAL_OWN_CRUD_PRIVILEGE','USER_OWN_CRUD_PRIVILEGE') " +
+            "   and #currentUser.userId == #userSetting.userId)")
     public UserSetting save(@RequestBody UserSettingDto userSetting, @AuthenticationPrincipal Object currentUser) {
         try {
             return userSettingService.create(userSetting);
@@ -55,16 +56,18 @@ public class UserSettingController {
 
     @PutMapping()
     @PreAuthorize("#userSettingDto.userId != null " +
-            "and hasAuthority('MEAL_ALL_CRUD_PRIVILEGE') " +
-            "or (hasAuthority('MEAL_OWN_CRUD_PRIVILEGE') and #currentUser.userId == #userSettingDto.userId)")
+            "and (hasAnyAuthority('MEAL_ALL_CRUD_PRIVILEGE','USER_ALL_CRUD_PRIVILEGE') " +
+            "or (hasAnyAuthority('MEAL_OWN_CRUD_PRIVILEGE','USER_OWN_CRUD_PRIVILEGE') " +
+            "   and #currentUser.userId == #userSettingDto.userId))")
     public UserSetting update(@RequestBody UserSettingDto userSettingDto,
                               @AuthenticationPrincipal PortalUserDetails currentUser) {
         return userSettingService.provision(userSettingDto);
     }
 
     @DeleteMapping("/{userId}")
-    @PreAuthorize("hasAuthority('MEAL_ALL_CRUD_PRIVILEGE') " +
-            "or (hasAuthority('MEAL_OWN_CRUD_PRIVILEGE') and #currentUser.userId == #userId)")
+    @PreAuthorize("hasAnyAuthority('MEAL_ALL_CRUD_PRIVILEGE','USER_ALL_CRUD_PRIVILEGE') " +
+            "or (hasAnyAuthority('MEAL_OWN_CRUD_PRIVILEGE','USER_OWN_CRUD_PRIVILEGE') " +
+            "   and #currentUser.userId == #userId)")
     public void delete(@PathVariable int userId, @AuthenticationPrincipal PortalUserDetails currentUser) {
         try {
             userSettingService.deleteByUserId(userId);

@@ -40,6 +40,14 @@
         </mat-radio-group>
       </div>
     </mat-card>
+    <mat-card>
+      <!--Calories-->
+      <mat-form-field>
+        <input matInput type='number' placeholder="Daily Calories expected"
+               formControlName="caloriesExpected"
+               autocomplete="caloriesExpected">
+      </mat-form-field>
+    </mat-card>
     <mat-divider fxFlex="1 0"></mat-divider>
     <mat-accordion>
       <mat-expansion-panel #passwordPanel

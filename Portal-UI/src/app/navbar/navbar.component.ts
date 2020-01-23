@@ -5,6 +5,7 @@ import {AppComponent} from '../app.component';
 import {MatDialog, MatDialogConfig} from "@angular/material/dialog";
 import {UserFormComponent} from "../user/user-form/user-form.component";
 import {UserService} from "../user/user.service";
+import {UserSettingService} from "../user-setting/user-setting-service";
 
 @Component({
   selector: 'app-navbar',
@@ -12,6 +13,8 @@ import {UserService} from "../user/user.service";
   styleUrls: ['./navbar.component.css']
 })
 export class NavbarComponent {
+
+
 
   AUTH = AuthenticationService;
   @Output() public sidenavToggle = new EventEmitter();

@@ -26,7 +26,7 @@ export class UserService {
     return this.http.get<User[]>(this.usersUrl);
   }
 
-  public save(user: User) {
+  public create(user: User) {
     return this.http.post<User>(this.usersUrl, user);
   }
 

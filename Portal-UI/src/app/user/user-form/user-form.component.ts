@@ -6,7 +6,9 @@ import {HttpErrorResponse} from '@angular/common/http';
 import {MAT_DIALOG_DATA, MatDialogRef} from '@angular/material/dialog';
 import * as moment from 'moment';
 import {User} from '../../model/user';
-import {PartialObserver} from 'rxjs';
+import {forkJoin, PartialObserver} from 'rxjs';
+import {UserSettingService} from "../../user-setting/user-setting-service";
+import {map} from "rxjs/operators";
 
 @Component({
   selector: 'app-my-modal',
@@ -21,6 +23,7 @@ export class UserFormComponent implements OnInit {
     @Inject(MAT_DIALOG_DATA) public data: any,
     public fb: FormBuilder,
     private userService: UserService,
+    private userSettingService: UserSettingService,
     private router: Router,
     private ngZone: NgZone,
   ) {
@@ -74,6 +77,7 @@ export class UserFormComponent implements OnInit {
       gender: [''],
       password: [''],
       password2: [''],
+      caloriesExpected: ['']
     }, {validator: this.passwordMatchValidator});
 
     switch (this.crudMode) {
@@ -99,11 +103,15 @@ export class UserFormComponent implements OnInit {
   }
 
   initValues() {
-    this.set('name', this.user.name);
-    this.set('email', this.user.email);
-    const dob: Date = new Date(this.user.dob);
-    this.set('dob', dob);
-    this.set('gender', this.user.gender);
+    this.userSettingService.getUserSettings(Number.parseInt(this.user.id))
+      .subscribe(userSettings => {
+        this.set('name', this.user.name);
+        this.set('email', this.user.email);
+        const dob: Date = new Date(this.user.dob);
+        this.set('dob', dob);
+        this.set('gender', this.user.gender);
+        this.set('caloriesExpected', (userSettings.caloriesExpected ? userSettings.caloriesExpected : 0));
+      })
   }
 
   /* Get errors */
@@ -114,19 +122,31 @@ export class UserFormComponent implements OnInit {
   /* Submit form (Create and Update) */
   submitUserForm() {
     if (this.userForm.valid) {
+
       const userToSave = this.userForm.value;
+      userToSave.id = this.user.id;
+      const userSettingToSave = {'userId': userToSave.id, 'caloriesExpected': userToSave.caloriesExpected};
+
       delete userToSave.password2;
       if (!this.passwordPanelExpanded) {
         delete userToSave.password;
       }
       if (this.crudMode === 'C') {
-        this.userService.save(userToSave).subscribe(this.formSubmitSubscriber);
+        forkJoin(
+          this.userSettingService.update(userSettingToSave),
+          this.userService.create(userToSave)
+        ).pipe(map(([first, second]) => second))
+          .subscribe(this.formSubmitSubscriber);
       } else if (this.crudMode === 'U') {
-        userToSave.id = this.user.id;
-        this.userService.update(userToSave).subscribe(this.formSubmitSubscriber);
+        forkJoin(
+          this.userSettingService.update(userSettingToSave),
+          this.userService.update(userToSave)
+        ).pipe(map(([first, second]) => second))
+          .subscribe(this.formSubmitSubscriber);
       }
     }
   }
+
   /**
    *
    */
@@ -164,9 +184,9 @@ export class UserFormComponent implements OnInit {
       // valid, cause passwords match
     } else if (formGroup.get('password').value === formGroup.get('password2').value) {
       return null;
- } else {
+    } else {
       return {passwordMismatch: true};
- }
+    }
   }
 
 
