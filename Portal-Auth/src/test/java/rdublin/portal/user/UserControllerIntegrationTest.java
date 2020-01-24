@@ -1,5 +1,7 @@
 package rdublin.portal.user;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ErrorCollector;
@@ -8,19 +10,19 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.json.JacksonJsonParser;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
-import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.MultiValueMap;
+import rdublin.portal.MockMvcAccessTokenObtainer;
 
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
-import static org.hamcrest.Matchers.hasEntry;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.hamcrest.Matchers.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -32,19 +34,28 @@ public class UserControllerIntegrationTest {
 
     public static final String TEST_USERNAME = "Admin";
     public static final String TEST_PASSWORD = "password";
-    public static final String TEST_AUTHORITY = "ROLE_ADMIN";
-    public static final boolean TEST_ENABLED = true;
 
+    public String accessToken = "";
     @Rule
     public ErrorCollector collector = new ErrorCollector();
-
     @Autowired
     public MockMvc mockMvc;
 
-    @Test
-    public void whenAdminAuthorizes_thenGetsAccessTokenWithProperData() throws Exception {
+    public static String asJsonString(final Object obj) {
+        try {
+            return new ObjectMapper().writeValueAsString(obj);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
 
-        String accessToken = obtainAccessToken(TEST_USERNAME, TEST_PASSWORD);
+    @Before
+    public void before() throws Exception {
+        accessToken = new MockMvcAccessTokenObtainer().obtainAccessToken(this.mockMvc, TEST_USERNAME, TEST_PASSWORD);
+    }
+
+    @Test
+    public void whenLoggedInUserRequestsSelf_thenSelfDataReturned() throws Exception {
 
         ResultActions result
                 = this.mockMvc.perform(
@@ -53,33 +64,91 @@ public class UserControllerIntegrationTest {
                               .andExpect(content().contentTypeCompatibleWith("application/json;charset=UTF-8"));
 
         String resultString = result.andReturn().getResponse().getContentAsString();
-        JacksonJsonParser jsonParser = new JacksonJsonParser();
-        Map<String, Object> resultMap = jsonParser.parseMap(resultString);
+        Map<String, Object> resultMap = new JacksonJsonParser().parseMap(resultString);
 
         String reason = "Resulting JSON should contain";
         collector.checkThat(reason, resultMap, hasEntry("username", TEST_USERNAME));
-        collector.checkThat(reason, resultMap, hasEntry("enabled", TEST_ENABLED));
     }
 
-    private String obtainAccessToken(String username, String password) throws Exception {
-
-        MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
-        params.add("grant_type", "password");
-        params.add("client_id", "browser");
-        params.add("username", username);
-        params.add("password", password);
+    @Test
+    public void whenListUsersRequest_thenNonemptyListReturned() throws Exception {
 
         ResultActions result
-                = mockMvc.perform(post("/oauth/token")
-                .params(params)
-                .with(httpBasic("browser", "secret"))
-                .accept("application/json;charset=UTF-8"))
-                         .andExpect(status().isOk())
-                         .andExpect(content().contentType("application/json;charset=UTF-8"));
+                = this.mockMvc.perform(
+                get("/users").header("Authorization", "Bearer " + accessToken))
+                              .andExpect(status().isOk())
+                              .andExpect(content().contentTypeCompatibleWith("application/json;charset=UTF-8"));
 
         String resultString = result.andReturn().getResponse().getContentAsString();
+        List<Object> resultList = new JacksonJsonParser().parseList(resultString);
 
-        JacksonJsonParser jsonParser = new JacksonJsonParser();
-        return jsonParser.parseMap(resultString).get("access_token").toString();
+        String reason = "Resulting JSON array should contain 3 predefined users";
+        collector.checkThat(reason, resultList, hasSize(greaterThanOrEqualTo(3)));
     }
+
+    @Test
+    public void whenCreateUser_thenCreatedUserDataReturned() throws Exception {
+
+        String newUserName = "Test-" + System.currentTimeMillis();
+        Map<String, Object> resultMap = createUser(newUserName);
+
+        String reason = "Resulting JSON should contain Created User's proper data";
+        collector.checkThat(reason, resultMap, hasEntry("name", newUserName));
+        collector.checkThat(reason, resultMap, hasKey("id"));
+    }
+
+    @Test
+    public void whenUpdateUser_thenUpdatedUserDataReturned() throws Exception {
+        //Create new user first
+        String newUserName = "Test-" + System.currentTimeMillis();
+        Map<String, Object> createdUserResultMap = createUser(newUserName);
+
+        String reason = "Resulting JSON should contain Created User's proper data";
+        collector.checkThat(reason, createdUserResultMap, hasEntry("name", newUserName));
+        collector.checkThat(reason, createdUserResultMap, hasKey("id"));
+
+        int createdUserId = (int) createdUserResultMap.get("id");
+
+        //Update created user Email
+        Map<String, Object> updateUserMap = new HashMap<>(createdUserResultMap);
+        String updateEmail = newUserName + "-updated-email-" + System.currentTimeMillis() + "@test.com";
+        updateUserMap.put("email", updateEmail);
+
+        ResultActions result
+                = this.mockMvc.perform(put("/users/" + createdUserId)
+                .content(asJsonString(updateUserMap)).contentType(MediaType.APPLICATION_JSON)
+                .header("Authorization", "Bearer " + accessToken))
+                              .andExpect(status().isOk())
+                              .andExpect(content().contentTypeCompatibleWith("application/json;charset=UTF-8"));
+
+        String resultString = result.andReturn().getResponse().getContentAsString();
+        Map<String, Object> updatedUserResultMap = new JacksonJsonParser().parseMap(resultString);
+
+        reason = "Resulting JSON should contain Updated User's proper data";
+        collector.checkThat(reason, updatedUserResultMap, hasEntry("name", newUserName));
+        collector.checkThat(reason, updatedUserResultMap, hasEntry("id", createdUserId));
+        collector.checkThat(reason, updatedUserResultMap, hasEntry("email", updateEmail));
+    }
+
+    private Map<String, Object> createUser(String newUserName) throws Exception {
+
+        Map<String, String> params = new HashMap<>();
+        params.put("name", newUserName);
+        params.put("email", newUserName + "@test.com");
+        params.put("dob", "2001-01-01");
+        params.put("gender", "Mail");
+        params.put("password", "password");
+
+        ResultActions result
+                = this.mockMvc.perform(
+                post("/users/")
+                        .content(asJsonString(params)).contentType(MediaType.APPLICATION_JSON)
+                        .header("Authorization", "Bearer " + accessToken))
+                              .andExpect(status().isOk())
+                              .andExpect(content().contentTypeCompatibleWith("application/json;charset=UTF-8"));
+
+        String resultString = result.andReturn().getResponse().getContentAsString();
+        return new JacksonJsonParser().parseMap(resultString);
+    }
+
 }
