@@ -52,6 +52,7 @@ public class Meal extends AuditedEntity {
     @Column(name = "calories", nullable = false)
     private Integer calories;
 
+    @Builder.Default
     @Column(name = "day_expectation_exceeded", nullable = false)
     private boolean userDayExpectationExceeded = false;
 

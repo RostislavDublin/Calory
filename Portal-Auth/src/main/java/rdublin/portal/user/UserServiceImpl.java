@@ -25,11 +25,9 @@ import java.util.stream.Stream;
 public class UserServiceImpl implements PortalUserDetailsService, UserService {
 
     @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
     RoleRepository roleRepository;
-
+    @Autowired
+    private UserRepository userRepository;
     @Autowired
     private BCryptPasswordEncoder bcryptEncoder;
 
@@ -54,15 +52,15 @@ public class UserServiceImpl implements PortalUserDetailsService, UserService {
     @Transactional
     public Set<GrantedAuthority> getAuthorities(@NotNull Set<Role> roles) {
         return Stream.concat(
-                roles.stream().map(p -> p.getName()),
-                getPrivileges(roles).stream().map(p -> p.getName())
+                roles.stream().map(Role::getName),
+                getPrivileges(roles).stream().map(Privilege::getName)
         )
-                     .map(p -> new SimpleGrantedAuthority(p))
+                     .map(SimpleGrantedAuthority::new)
                      .collect(Collectors.toSet());
     }
 
     @Override
-    public List findAll() {
+    public List<User> findAll() {
         List<User> list = new ArrayList<>();
         userRepository.findAll().iterator().forEachRemaining(list::add);
         return list;
