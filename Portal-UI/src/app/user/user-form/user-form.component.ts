@@ -6,9 +6,8 @@ import {HttpErrorResponse} from '@angular/common/http';
 import {MAT_DIALOG_DATA, MatDialogRef} from '@angular/material/dialog';
 import * as moment from 'moment';
 import {User} from '../../model/user';
-import {forkJoin, PartialObserver} from 'rxjs';
+import {PartialObserver} from 'rxjs';
 import {UserSettingService} from "../../user-setting/user-setting-service";
-import {map} from "rxjs/operators";
 
 @Component({
   selector: 'app-my-modal',
@@ -24,8 +23,6 @@ export class UserFormComponent implements OnInit {
     public fb: FormBuilder,
     private userService: UserService,
     private userSettingService: UserSettingService,
-    private router: Router,
-    private ngZone: NgZone,
   ) {
   }
 
@@ -124,26 +121,35 @@ export class UserFormComponent implements OnInit {
     if (this.userForm.valid) {
 
       const userToSave = this.userForm.value;
-      userToSave.id = this.user.id;
-      const userSettingToSave = {'userId': userToSave.id, 'caloriesExpected': userToSave.caloriesExpected};
 
       delete userToSave.password2;
       if (!this.passwordPanelExpanded) {
         delete userToSave.password;
       }
+
+      //Set UserSetting and close dialog on success.
+      let userSettingsSetter: PartialObserver<User> = {
+        next: (result) => {
+          userToSave.id = Number.parseInt(result.id);
+          const userSettingToSave = {'userId': userToSave.id, 'caloriesExpected': userToSave.caloriesExpected};
+          this.userSettingService.update(userSettingToSave)
+            .subscribe(this.formSubmitSubscriber);
+        },
+        error: error => {
+          if (error instanceof HttpErrorResponse) {
+            console.log('Status: %d, message: %s', error.error.status, error.error.message);
+            this.userForm.get('name').setErrors({notUnique: true});
+          }
+        }
+      };
+
       if (this.crudMode === 'C') {
-        forkJoin(
-          this.userSettingService.update(userSettingToSave),
-          this.userService.create(userToSave)
-        ).pipe(map(([first, second]) => second))
-          .subscribe(this.formSubmitSubscriber);
+        this.userService.create(userToSave).subscribe(userSettingsSetter)
       } else if (this.crudMode === 'U') {
-        forkJoin(
-          this.userSettingService.update(userSettingToSave),
-          this.userService.update(userToSave)
-        ).pipe(map(([first, second]) => second))
-          .subscribe(this.formSubmitSubscriber);
+        userToSave.id = this.user.id;
+        this.userService.update(userToSave).subscribe(userSettingsSetter);
       }
+
     }
   }
 

@@ -8,6 +8,9 @@ import {MatTableDataSource} from '@angular/material/table';
 import {SelectionModel} from '@angular/cdk/collections';
 import {MatMenuTrigger} from '@angular/material/menu';
 import {MatPaginator} from '@angular/material/paginator';
+import {UserSettingService} from "../../user-setting/user-setting-service";
+import {forkJoin} from "rxjs";
+import {map} from "rxjs/operators";
 
 @Component({
   selector: 'app-user-list',
@@ -28,6 +31,7 @@ export class UserListComponent implements OnInit {
 
   constructor(
     private userService: UserService,
+    private userSettingService: UserSettingService,
     private router: Router,
     public dialog: MatDialog,
     private changeDetectorRefs: ChangeDetectorRef
@@ -108,6 +112,8 @@ export class UserListComponent implements OnInit {
   }
 
   onContextMenuDeleteUser(user: User) {
-    this.userService.delete(user).subscribe(next => this.refresh());
+    forkJoin(this.userService.delete(user), this.userSettingService.delete(user.id))
+      .pipe(map((first, last) => last))
+      .subscribe(next => this.refresh());
   }
 }

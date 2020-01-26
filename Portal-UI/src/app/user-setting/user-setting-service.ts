@@ -39,4 +39,9 @@ export class UserSettingService {
     const url: string = this.userSettingUrl;
     return this.http.put<UserSetting>(url, userSetting);
   }
+
+  public delete(id: string) {
+    const url: string = this.userSettingUrl.concat('/', id);
+    return this.http.delete(url);
+  }
 }

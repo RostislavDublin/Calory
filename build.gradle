@@ -1,5 +1,9 @@
 import org.springframework.boot.gradle.plugin.SpringBootPlugin
 
+import java.nio.file.Files
+import java.nio.file.Paths
+import java.nio.file.StandardCopyOption
+
 plugins {
     id "net.ltgt.apt" version "0.21" apply false
     id "io.spring.dependency-management" version "1.0.8.RELEASE" apply false
@@ -17,7 +21,7 @@ ext {
     springCloudVersion = 'Hoxton.RELEASE'
 }
 
-configure(subprojects.findAll { it.name != 'Portal-Infra' && it.name != 'Portal-Commons' }) {
+configure(subprojects) {
 
     repositories {
         mavenLocal()
@@ -27,11 +31,6 @@ configure(subprojects.findAll { it.name != 'Portal-Infra' && it.name != 'Portal-
         }
     }
 
-    apply plugin: "net.ltgt.apt"
-    apply plugin: 'java'
-    sourceCompatibility = '1.8'
-
-    apply plugin: 'org.springframework.boot'
     apply plugin: 'io.spring.dependency-management'
 
     //https://docs.spring.io/dependency-management-plugin/docs/current/reference/html/
@@ -42,59 +41,102 @@ configure(subprojects.findAll { it.name != 'Portal-Infra' && it.name != 'Portal-
         }
     }
 
-    apply plugin: 'maven-publish'
 
-    configurations {
-        developmentOnly
-        runtimeClasspath {
-            extendsFrom developmentOnly
-        }
-        compileOnly {
-            extendsFrom annotationProcessor
-        }
-    }
+    if (it.name != 'Portal-Infra' && it.name != 'Portal-Commons') {
 
-    dependencies {
-        compile 'org.springframework.boot:spring-boot-starter'
+        apply plugin: "net.ltgt.apt"
+        apply plugin: 'java'
+        sourceCompatibility = '1.8'
 
-        //config service (at least client)
-        implementation 'org.springframework.cloud:spring-cloud-starter-config'
-        compile group: 'org.springframework.retry', name: 'spring-retry'
-        compile group: 'org.springframework.boot', name: 'spring-boot-starter-aop'
-        //eliminate warnings: https://stackoverflow.com/questions/53326271/spring-nullable-annotation-generates-unknown-enum-constant-warning
-        implementation 'com.google.code.findbugs:jsr305:3.0.2'
-        implementation 'org.springframework.boot:spring-boot-starter-actuator'
+        apply plugin: 'org.springframework.boot'
+        apply plugin: 'maven-publish'
 
-        compileOnly 'org.projectlombok:lombok'
-        annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
-        annotationProcessor 'org.projectlombok:lombok'
-//        developmentOnly 'org.springframework.boot:spring-boot-devtools'
-
-        testCompile group: 'junit', name: 'junit', version: '4.12'
-        testCompile group: 'org.powermock', name: 'powermock-module-junit4', version: '2.0.4'
-        testCompile group: 'org.powermock', name: 'powermock-api-mockito2', version: '2.0.4'
-
-        testImplementation('org.springframework.boot:spring-boot-starter-test') {
-            exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
-        }
-        testImplementation 'org.springframework.security:spring-security-test'
-        testImplementation group: 'com.h2database', name: 'h2', version: '1.4.194'
-
-    }
-
-    publishing {
-        publications {
-            maven(MavenPublication) {
-                from(components.java)
+        configurations {
+            developmentOnly
+            runtimeClasspath {
+                extendsFrom developmentOnly
+            }
+            compileOnly {
+                extendsFrom annotationProcessor
             }
         }
-    }
 
-    tasks.withType(JavaCompile) {
-        options.encoding = 'UTF-8'
-    }
+        dependencies {
+            compile 'org.springframework.boot:spring-boot-starter'
 
-    test {
-        useJUnitPlatform()
+            //config service (at least client)
+            implementation 'org.springframework.cloud:spring-cloud-starter-config'
+            compile group: 'org.springframework.retry', name: 'spring-retry'
+            compile group: 'org.springframework.boot', name: 'spring-boot-starter-aop'
+            //eliminate warnings: https://stackoverflow.com/questions/53326271/spring-nullable-annotation-generates-unknown-enum-constant-warning
+            implementation 'com.google.code.findbugs:jsr305:3.0.2'
+            implementation 'org.springframework.boot:spring-boot-starter-actuator'
+
+            compileOnly 'org.projectlombok:lombok'
+            annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
+            annotationProcessor 'org.projectlombok:lombok'
+//        developmentOnly 'org.springframework.boot:spring-boot-devtools'
+
+            testCompile group: 'junit', name: 'junit', version: '4.12'
+            testCompile group: 'org.powermock', name: 'powermock-module-junit4', version: '2.0.4'
+            testCompile group: 'org.powermock', name: 'powermock-api-mockito2', version: '2.0.4'
+
+            testImplementation('org.springframework.boot:spring-boot-starter-test') {
+                exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
+            }
+            testImplementation 'org.springframework.security:spring-security-test'
+            testImplementation group: 'com.h2database', name: 'h2', version: '1.4.194'
+
+        }
+
+        publishing {
+            publications {
+                maven(MavenPublication) {
+                    from(components.java)
+                }
+            }
+        }
+
+        tasks.withType(JavaCompile) {
+            options.encoding = 'UTF-8'
+        }
+
+        test {
+            useJUnitPlatform()
+        }
+    }
+/*
+    Task syncJar = tasks.create("sync${moduleName}Jar", Copy) {
+        dependsOn ":${moduleName}:assemble"
+        from archiveFile
+        into "$dockerBuildDir/${moduleName}"
+    }.group('docker-container')
+*/
+}
+
+tasks.create('hello') {
+    doLast {
+        println "${buildDir}"
     }
 }
+
+tasks.create("collectJars") {
+    doLast {
+        //create collector dir if doesn't exist
+        java.nio.file.Path jarsPath = Paths.get(rootProject.buildDir.toString(), "/jars/");
+
+        Files.createDirectories(jarsPath);
+
+
+        subprojects.findAll { it.plugins.hasPlugin("org.springframework.boot") }.forEach {
+            println "Collect Jar from ${it.getName()}"
+
+            //Define submodule Jar name
+            Jar jarTask = ((Jar) (it.getTasksByName("jar", false))[0])
+            File jarFile = jarTask.getArchiveFile().map { af -> af.asFile }.getOrNull();
+
+            Files.copy(jarFile.toPath(), jarsPath.resolve(jarFile.getName()), StandardCopyOption.REPLACE_EXISTING);
+        }
+    }
+}.group('aggregation')
+
