@@ -142,13 +142,13 @@ Default DB settings are following:
 - for the calories-service (in the ```calories-service.yml```):
 ```
 spring.jpa.datasource.url = "jdbc:mysql://${MYSQL_HOST:localhost}:3306/calory_portal_calories" 
-spring.jpa.datasource.username = "root"``` 
+spring.jpa.datasource.username = "root" 
 spring.jpa.datasource.password = "123456Qw"
 ``` 
 - for the auth-service (in the ```auth-service.yml```):
 ```
 spring.jpa.datasource.url = "jdbc:mysql://${MYSQL_HOST:localhost}:3306/calory_portal_auth" 
-spring.jpa.datasource.username = "root"``` 
+spring.jpa.datasource.username = "root" 
 spring.jpa.datasource.password = "123456Qw"
 ``` 
 Those DBs should be provisioned and accessible via the network from the services' location.
