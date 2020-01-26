@@ -106,6 +106,9 @@ And certainly, it contains a ```/shared``` folder where all the services' config
 - gateway-service.yml
 - registry-service.yml 
 
+Two services, ```auth-service``` and ```calories-service``` store their data in MySql DBs.
+See next paragraph for the default DBs' names set in the embedded configs.
+
 ### Default configuration
 To use embedded config defaults you simply run services' JARs as-is 
 without any additional configs provided. It leads to all services use "localhost" URL
@@ -118,6 +121,38 @@ with the following ports of each service:
 - registry-service  - 8761
 
 So, the application will be accessible on [http://localhost:8080](http://localhost:8080)
+
+The following parameters use to set up and point to the DBs:
+```
+spring:
+  jpa:
+    database-platform: "org.hibernate.dialect.MySQL5InnoDBDialect"
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+  datasource:
+    url: "jdbc:mysql://${MYSQL_HOST:localhost}:3306/<<<DB_NAME>>>"
+    username: root
+    password: 123456Qw
+```
+Default DB settings are following: 
+- for the calories-service (in the ```calories-service.yml```):
+```
+spring.jpa.datasource.url = "jdbc:mysql://${MYSQL_HOST:localhost}:3306/calory_portal_calories" 
+spring.jpa.datasource.username = "root"``` 
+spring.jpa.datasource.password = "123456Qw"
+``` 
+- for the auth-service (in the ```auth-service.yml```):
+```
+spring.jpa.datasource.url = "jdbc:mysql://${MYSQL_HOST:localhost}:3306/calory_portal_auth" 
+spring.jpa.datasource.username = "root"``` 
+spring.jpa.datasource.password = "123456Qw"
+``` 
+Those DBs should be provisioned and accessible via the network from the services' location.
+So, you should provide those default empty DBs on the localhost MySql, or customize configs.  
 
 ### Customized configuration
 If you install services on any custom environment/location you need to set customized configs.
