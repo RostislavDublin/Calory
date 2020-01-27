@@ -1,0 +1,12 @@
+eureka:
+  instance:
+    prefer-ip-address: false
+  client:
+    serviceUrl:
+      defaultZone: http://calory-portal-registry:8761/eureka/ #where our registry server is located
+
+security:
+  oauth2:
+    resource:
+      user-info-uri: http://calory-portal-gateway:8080/auth/users/current
+      token-info-uri: http://calory-portal-gateway:8080/auth/oauth/check_token
