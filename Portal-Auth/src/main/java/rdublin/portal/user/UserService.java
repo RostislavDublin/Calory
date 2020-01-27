@@ -22,5 +22,5 @@ public interface UserService {
 
     User update(UserDto userDto);
 
-    User save(UserDto user);
+    User create(UserDto user);
 }

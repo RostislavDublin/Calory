@@ -1,0 +1,62 @@
+<div fxLayout='column'>
+  <span>{{config.listTitle}}</span>
+  <div fxLayout='column'>
+
+    <mat-form-field *ngFor="let filtr of config.getFilters()">
+      <ng-container *ngIf="filtr.inputType === 'select'">
+        <!--<mat-label>Filter by {{filtr.name}}</mat-label>-->
+        <mat-select
+          placeholder="Filter by {{filtr.name}}"
+          (valueChange)="applyFilter(filtr.id, $event)"
+          value="{{config.getFilterValue(filtr.id)}}"
+        >
+          <mat-option *ngFor="let option of filtr.optionsData | keyvalue" value="{{option.key}}">
+            {{option.value}}
+          </mat-option>
+        </mat-select>
+
+      </ng-container>
+      <ng-container *ngIf="filtr.inputType !== 'select'">
+        <input matInput
+               (change)="applyFilter(filtr.id, $event.target['value'])"
+               type="{{filtr.inputType}}"
+               placeholder="Filter by {{filtr.name}}"
+               [value]="config.getFilterValue(filtr.id)"
+        >
+      </ng-container>
+    </mat-form-field>
+    <table mat-table
+           [dataSource]="dataSource" matSort
+           class="mat-elevation-z8"
+           fxFlex>
+
+      <ng-container *ngFor="let colmn of config.columns" matColumnDef="{{colmn.id}}">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>{{colmn.name}}</th>
+        <td mat-cell *matCellDef="let element">{{colmn.formatted(element[colmn.id])}}</td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="config.getColumnIds(); sticky: true"></tr>
+
+      <tr tabindex="999" mat-row *matRowDef="let row; columns: config.getColumnIds(); let entry"
+          (contextmenu)="onContextMenu($event, row)"
+          (dblclick)="onContextMenuEditItem(row)"
+          [ngClass]=config.getEntryClass(entry)
+      ></tr>
+    </table>
+    <mat-paginator [pageSizeOptions]="[5, 10, 20]" showFirstLastButtons class="mat-elevation-z8"></mat-paginator>
+  </div>
+  <mat-divider fxFlex="1 0"></mat-divider>
+  <button mat-raised-button (click)="openCrudDialog(crudModes.Create,null)">Add {{config.itemName}}</button>
+</div>
+<div style="visibility: hidden; position: fixed"
+     [style.left]="contextMenuPosition.x"
+     [style.top]="contextMenuPosition.y"
+     [matMenuTriggerFor]="contextMenu">
+</div>
+<mat-menu #contextMenu="matMenu">
+  <ng-template matMenuContent let-item="data">
+    <button mat-menu-item (click)="onContextMenuEditItem(item)">Edit {{config.itemName}}</button>
+    <button mat-menu-item (click)="onContextMenuDeleteItem(item)">Delete {{config.itemName}}</button>
+  </ng-template>
+</mat-menu>
+

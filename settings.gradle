@@ -1,5 +1,5 @@
 rootProject.name = 'Portal'
-//include 'Portal-UI'
+include 'Portal-UI'
 include 'Portal-Auth'
 include 'Portal-Config'
 include 'Portal-Registry'

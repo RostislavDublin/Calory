@@ -14,6 +14,7 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
+import javax.persistence.Version;
 
 @Data
 @EqualsAndHashCode(callSuper = false)
@@ -26,11 +27,15 @@ import javax.persistence.UniqueConstraint;
         @UniqueConstraint(name = "UK_user_settings_user_id", columnNames = {"user_id"})}
 )
 public class UserSetting extends AuditedEntity {
+
+    @Version
+    private int version;
+
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Integer id;
 
-    @Column(name = "user_id", nullable = false, updatable = false)
+    @Column(name = "user_id", nullable = false)
     private Integer userId;
 
     @Column(name = "calories_expected", nullable = false)

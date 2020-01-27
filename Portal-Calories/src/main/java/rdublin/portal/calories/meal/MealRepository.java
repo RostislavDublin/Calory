@@ -2,9 +2,6 @@ package rdublin.portal.calories.meal;
 
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.PagingAndSortingRepository;
-import org.springframework.data.repository.query.Param;
-import org.springframework.format.annotation.DateTimeFormat;
-import org.springframework.lang.Nullable;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -21,11 +18,10 @@ public interface MealRepository extends PagingAndSortingRepository<Meal, Integer
             "(?5 is null or ?5 = '00:00:00' or m.mealTime <= ?5)"
     )
     List<Meal> findAllByUserAndMealPeriod(
-            @Nullable @Param("userId") Integer userId,
-            @Nullable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) @Param("dateFrom") LocalDate dateFrom,
-            @Nullable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) @Param("dateTo") LocalDate dateTo,
-            @Nullable @DateTimeFormat(iso = DateTimeFormat.ISO.TIME) @Param("timeFrom") LocalTime timeFrom,
-            @Nullable @DateTimeFormat(iso = DateTimeFormat.ISO.TIME) @Param("timeTo") LocalTime timeTo
+            Integer userId, LocalDate dateFrom, LocalDate dateTo, LocalTime timeFrom, LocalTime timeTo
     );
+
+    @Query("select distinct m.mealDate from Meal m where m.userId = ?1")
+    List<LocalDate> findAllUserMealDays(Integer userId);
 
 }

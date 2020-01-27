@@ -1,0 +1,46 @@
+<!-- Title group  -->
+<div fxLayout='column'>
+  <h1 class="mat-h1">{{crudTitle}}</h1>
+  <!--  <h4 *ngIf="user" class="mat-h4">id:{{user.id}}</h4>-->
+  <mat-divider fxFlex="1 0"></mat-divider>
+</div>
+
+<!-- Form -->
+<div fxLayout='column'>
+  <form [formGroup]="crudForm" (ngSubmit)="submitCrudForm()" novalidate fxLayout='column'>
+    <!--<mat-error>{{crudForm.getControl("aaa")}}</mat-error>-->
+    <mat-card fxLayout='column'>
+      <!--Name-->
+      <mat-form-field *ngFor="let fld of crudDialogConfig.fields"
+                      [ngClass]=fld.getInputClass()
+      >
+        <input matInput formControlName="{{fld.id}}"
+               type="{{fld.type}}"
+               placeholder="{{fld.placeholder}}"
+               autocomplete="new-name">
+        <ng-container *ngFor="let val of fld.validation">
+          <ng-container *ngFor="let err of val.errors">
+            <mat-error *ngIf="handleError(fld.id, err.errorName)">{{err.errorMessage}}</mat-error>
+          </ng-container>
+        </ng-container>
+      </mat-form-field>
+    </mat-card>
+    <mat-divider fxFlex="1 0"></mat-divider>
+    <!-- Submit & Reset -->
+    <mat-card>
+      <div class="full-wrapper button-wrapper">
+        <div class="button-wrapper">
+          <button mat-flat-button color="warn" type="submit"
+                  [hidden]="this.crudDialogConfig.crudMode === CRUD_MODES.Delete"
+                  [disabled]="!crudForm.valid">Submit
+          </button>
+          <button mat-flat-button color="warn" type="button"
+                  (click)="submitCrudForm()"
+                  [hidden]="this.crudDialogConfig.crudMode !== CRUD_MODES.Delete">Delete
+          </button>
+          <button mat-flat-button color="grey" type="button" (click)="cancelDialog()">Cancel</button>
+        </div>
+      </div>
+    </mat-card>
+  </form>
+</div>

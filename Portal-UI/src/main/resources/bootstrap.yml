@@ -1,0 +1,14 @@
+spring:
+  application:
+    name: frontend-service
+  cloud:
+    config:
+      uri: http://localhost:8888
+      password: 1234
+      username: user
+      fail-fast: true
+      retry:
+        initial-interval: 2000
+        max-interval: 10000
+        max-attempts: 100
+

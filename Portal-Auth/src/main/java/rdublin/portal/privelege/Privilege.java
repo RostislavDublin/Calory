@@ -16,6 +16,7 @@ import javax.persistence.Id;
 import javax.persistence.ManyToMany;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
+import javax.persistence.Version;
 import java.util.Set;
 
 @Data
@@ -30,6 +31,10 @@ import java.util.Set;
 })
 
 public class Privilege {
+
+    @Version
+    private int version;
+
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;

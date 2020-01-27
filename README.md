@@ -1,97 +1,178 @@
-# REST operations
-## REST Authentication operations
-### POST Authenticate as Portal Admin user
-```curl browser:secret@localhost:8080/auth/oauth/token -dgrant_type=password -dscope=ui -dusername=Admin -dpassword=password -dclient_id=browser```
+# Application for the input of calories
 
-This is for the application clients to Authenticate at the Auth microservice OAuth2 authorization server and get JWT
- access token to be able to operate at other application's microservices.  
+## Purpose
+Provide a solution to allow people to track their personal meal calories consumption, 
+get daily consumption details and statistics and be noticed about the consumption expectations exceed.
 
-Copy "access_token" string from the resulting JSON and save it to the environment variable, eg.  $ACCESS_TOKEN:
+- For detailed requirements, see REQUIREMENTS.md document.  
 
-```export ACCESS_TOKEN=eyJhbGciOiJIUzI1NiIsInR5cCI6Ik...```
+## Functionality
+- The detailed application requirements are stored in the REQUIREMENTS.md file
+- The architecture description is in the README.ARCH.md file.
 
-## REST User Accounts CRUD operations
-### GET all Users
-```curl localhost:8080/auth/users/ -H "Authorization: Bearer $ACCESS_TOKEN"```
+### Central Web GUI 
+- single-page design
+- navigation bar links:
+    - Users: 
+        - user list (with filters) 
+            - User profile CRUD dialog;
+    - Meals: 
+        - meals list (with filters and conditional data formatting)
+            - Meal item CRUD dialog;
+    - Login:
+        - login form (username/password)
+    - Register:
+        - new user self registration page
+    - LoggedIn Username:
+        - logged-in user name informer
+        - context menu:
+            - Profile:
+                - current user profile self edit dialog;
+            - Logout
+                - logout option
+                
+## REST API
+All the application's operations are also available through the REST. 
+See the comprehensive manual in the README.REST.md file. 
+                
+### Security, Authentication and Authorization         
+#### User security privileges predefined
+- USER_OWN_CRUD_PRIVILEGE - allows user to CRUD own user profile data
+- MEAL_OWN_CRUD_PRIVILEGE - allows user to CRUD own meal records
+- USER_ALL_CRUD_PRIVILEGE - allows user to CRUD all users' profiles data
+- MEAL_ALL_CRUD_PRIVILEGE - allows user to CRUD all users' meal records
 
-Requires user to have USER_ALL_CRUD_PRIVILEGE authority.
+#### User roles (and their privileges) predefined
+- ROLE_ADMIN - Admin with full access, has:
+    - USER_ALL_CRUD_PRIVILEGE, 
+    - MEAL_ALL_CRUD_PRIVILEGE 
+- ROLE_USER_MANAGER - Manager with full access to all users' profiles
+    - USER_ALL_CRUD_PRIVILEGE
+- ROLE_REGULAR_USER - Regular User with access to only own user profile and meal data 
+    - USER_OWN_CRUD_PRIVILEGE
+    - MEAL_OWN_CRUD_PRIVILEGE
+    
+#### User accounts predefined
+- Admin. Password: password. 
+- Manager. Password: password. 
+- TestUser. Password: password.      
 
-### GET certain User by ID 
-```curl localhost:8080/auth/users/{userId} -H "Authorization: Bearer $ACCESS_TOKEN"```
+# Build, Deploy and Configure, Run and Connect
+## Build
+- Pull the project from the Git repo
+- Open the project in your IDE
+- Run the following Gradle command to build the solution
 
-Requires user to have USER_ALL_CRUD_PRIVILEGE authority, or USER_OWN_CRUD_PRIVILEGE (to request by own userId).
+```./gradlew clean build```
+- Run the following Gradle command to copy modules' JARs from their own build dirs "build/libs/"
+to the central "collector" dir "build/jars/" of the root module:
 
-### GET current Authorized User 
-```curl localhost:8080/auth/users/current -H "Authorization: Bearer $ACCESS_TOKEN"```
+```./gradlew collectJars```
+- be ready to use those resulting JARs for the solution microservices run:
+    - Portal-Auth-0.1.0.jar - authentication service
+    - Portal-Calories-0.1.0.jar - meals&calory service
+    - Portal-Config-0.1.0.jar - config server service  
+    - Portal-Gateway-0.1.0.jar - central gateway service
+    - Portal-Registry-0.1.0.jar - registry/discovery service
+    - Portal-UI-0.1.0.jar - web frontend service
+    
+## Deploy and Configure
+All 6 services take their configs from the config service. 
+On start, they know only the config endpoint URL of the config server 
+written in their ```bootstrap.yml``` files: 
 
-Requires user to be Authorized. Returns extended Userdetails. Used as OAUth2 user-info-uri endpoint.
+```
+spring:
+  cloud:
+    config:
+      uri: http://localhost:8888
+```
+The config server contains its own config in the ```application.yml``` file where it has settings 
+for its own server port and the location of all its client services config files:
+```
+server:
+  port: 8888 #the port where the config-server will be acessible
+spring:
+  cloud:
+    config:
+      server:
+        native:
+          search-locations: classpath:/shared #tells spring where to locate the config files
+```  
+And certainly, it contains a ```/shared``` folder where all the services' configs contain:
+- auth-service.yml
+- calories-service.yml
+- frontend-service.yml
+- gateway-service.yml
+- registry-service.yml 
 
-### POST create User
-```curl localhost:8080/auth/users -d'{"name": "TestUser2", "email": "testuser2@mail.ru", "dob": "2001-01-01", "gender": "Male", "password": "12345678"}'  -H 'Content-Type: application/json'```
+Two services, ```auth-service``` and ```calories-service``` store their data in MySql DBs.
+See next paragraph for the default DBs' names set in the embedded configs.
 
-Doesn't require Authorization. Returns created User. Can be used by new user to self register. 
+### Default configuration
+To use embedded config defaults you simply run services' JARs as-is 
+without any additional configs provided. It leads to all services use "localhost" URL
+with the following ports of each service:
+- config-service - 8888
+- auth-service - 8082
+- calories-service - 8084
+- frontend-service - 8081
+- gateway-service - 8080
+- registry-service  - 8761
 
-### PUT update User by ID 
-```curl -X PUT localhost:8080/auth/users/13 -d'{"name": "TestUser2", "email": "testuser2@mail.ru", "dob": "2001-01-01", "gender": "Male", "password": "12345678"}'  -H 'Content-Type: application/json' -H "Authorization: Bearer $ACCESS_TOKEN"```
+So, the application will be accessible on [http://localhost:8080](http://localhost:8080)
 
-Requires user to have USER_ALL_CRUD_PRIVILEGE authority, or USER_OWN_CRUD_PRIVILEGE (to request by own userId).
+The following parameters use to set up and point to the DBs:
+```
+spring:
+  jpa:
+    database-platform: "org.hibernate.dialect.MySQL5InnoDBDialect"
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+  datasource:
+    url: "jdbc:mysql://${MYSQL_HOST:localhost}:3306/<<<DB_NAME>>>"
+    username: root
+    password: 123456Qw
+```
+Default DB settings are following: 
+- for the calories-service (in the ```calories-service.yml```):
+```
+spring.jpa.datasource.url = "jdbc:mysql://${MYSQL_HOST:localhost}:3306/calory_portal_calories" 
+spring.jpa.datasource.username = "root" 
+spring.jpa.datasource.password = "123456Qw"
+``` 
+- for the auth-service (in the ```auth-service.yml```):
+```
+spring.jpa.datasource.url = "jdbc:mysql://${MYSQL_HOST:localhost}:3306/calory_portal_auth" 
+spring.jpa.datasource.username = "root" 
+spring.jpa.datasource.password = "123456Qw"
+``` 
+Those DBs should be provisioned and accessible via the network from the services' location.
+So, you should provide those default empty DBs on the localhost MySql, or customize configs.  
 
-### DELETE User by ID 
-```curl -X DELETE localhost:8080/auth/users/13 -H "Authorization: Bearer $ACCESS_TOKEN"```
+### Customized configuration
+If you install services on any custom environment/location you need to set customized configs.
+Each service is a Spring Boot application, so you can override any property by several means. 
+Knowing the properties files which each service use (see this section above) we can override what we wish. 
+Use any approach, see: [Spring Properties File Outside jar](https://www.baeldung.com/spring-properties-file-outside-jar)
 
-Requires user to have USER_ALL_CRUD_PRIVILEGE authority, or USER_OWN_CRUD_PRIVILEGE (to request by own userId).
-
-## REST User Settings CRUD operations
-
-## REST Meal CRUD operations
-
-### GET Meal by ID
-```curl localhost:8080/calories/meals/4 -H "Authorization: Bearer $ACCESS_TOKEN"```
-
-Requires user to have MEAL_ALL_CRUD_PRIVILEGE authority or MEAL_OWN_CRUD_PRIVILEGE (to request Meal with own userId).
-
-### GET all Meals of all Users
-```curl localhost:8080/calories/meals/ -H "Authorization: Bearer $ACCESS_TOKEN"```
-
-Requires user to have MEAL_ALL_CRUD_PRIVILEGE authority.
-
-### GET all Meals of User by Id
-```curl localhost:8080/calories/meals?userId=10 -H "Authorization: Bearer $ACCESS_TOKEN"```
-
-Requires user to have MEAL_ALL_CRUD_PRIVILEGE authority or MEAL_OWN_CRUD_PRIVILEGE (to request by own userId).
-
-### GET filtered Meals of all Users or certain User by Id
-
-All filter parameters are optional. Certain parameter has effect only if it is set to non empty value.
-- Filter parameters are:
-    - dateFrom - period start date (in yyyy-MM-dd format) 
-    - dateTo - period end date (in yyyy-MM-dd format) 
+### Deploy and Run
+We have 6 services JARs in the ```build/jars/``` "collector" directory.
+Grab them, put into the target directory/directories and run like this (all together or separately):
+```shell script
+java -jar Portal-Auth-0.1.0.jar /
+java -jar Portal-Calories-0.1.0.jar /
+java -jar Portal-Config-0.1.0.jar /  
+java -jar Portal-Gateway-0.1.0.jar /
+java -jar Portal-Registry-0.1.0.jar /
+java -jar Portal-UI-0.1.0.jar
+```
+### Connect and Use
+Open your browser and point to the gateway-service URL. 
+This is http://localhost:8080 (on default)
+  
  
-    - timeFrom - period start time (in HH:MM format)
-    - timeTo - period end time (in HH:MM format)
-    
-- Examples:
-    - all Meals of all Users in January 2020 at time between 10:00 and 16:30
-    
-    ```curl "localhost:8080/calories/meals?dateFrom=2020-01-01&dateTo=2020-01-31&timeFrom=10:00&timeTo=16:30" -H "Authorization: Bearer $ACCESS_TOKEN"```
-  
-    - all Meals of User with ID 10 before 10 January 2020 at time not earlier 13:00
-    
-    ```curl "localhost:8080/calories/meals?userId=10&dateTo=2020-01-10&timeFrom=13:00" -H "Authorization: Bearer $ACCESS_TOKEN"```
-  
-### POST create Meal
-
-```curl localhost:8080/calories/meals -d'{"userId": 10, "mealDate": "2020-01-15", "mealTime": "11:30", "meal": "cake", "calories": 125}' -H 'Content-Type: application/json' -H "Authorization: Bearer $ACCESS_TOKEN"```
-
-Requires user to have MEAL_ALL_CRUD_PRIVILEGE authority or MEAL_OWN_CRUD_PRIVILEGE (to create Meal with own userId).
-
-### PUT update Meal by ID 
-```curl -X PUT localhost:8080/calories/meals/3 -d'{"userId": 8, "mealDate": "2020-01-03", "mealTime": "08:30", "meal": "cheesecake", "calories": 321}'  -H 'Content-Type: application/json' -H "Authorization: Bearer $ACCESS_TOKEN"```
-
-Requires user to have MEAL_ALL_CRUD_PRIVILEGE authority or MEAL_OWN_CRUD_PRIVILEGE (to update Meal with own userId and without option to change userId).
-
-### DELETE Meal by ID 
-```curl -X DELETE localhost:8080/calories/meals/3 -H "Authorization: Bearer $ACCESS_TOKEN"```
-
-Requires user to have MEAL_ALL_CRUD_PRIVILEGE authority or MEAL_OWN_CRUD_PRIVILEGE (to delete Meal with own userId).
-

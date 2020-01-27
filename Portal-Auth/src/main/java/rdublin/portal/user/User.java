@@ -20,6 +20,7 @@ import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
+import javax.persistence.Version;
 import java.util.Date;
 import java.util.Set;
 
@@ -34,6 +35,10 @@ import java.util.Set;
         @UniqueConstraint(name = "UK_user_email", columnNames = {"email"}),
 })
 public class User extends AuditedEntity {
+
+    @Version
+    private int version;
+
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Integer id;
