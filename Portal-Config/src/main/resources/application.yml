@@ -3,7 +3,8 @@ spring:
     config:
       server:
         native:
-          search-locations: classpath:/shared #tells spring where to locate the config files
+          # where the config-service is running
+          search-locations: "${SPRING_CLOUD_CONFIG_SERVER_NATIVE_SEARCH_LOCATIONS:classpath:/shared}"
   profiles:
     active: native #we are using native because the config server uses a git repo by default
   security:

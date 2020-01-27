@@ -3,7 +3,7 @@ spring:
     name: registry-service #name of the application
   cloud:
     config:
-      uri: http://localhost:8888 #where the config-service is running
+      uri: "${SPRING_CLOUD_CONFIG_URI:http://localhost:8888}" #where the config-service is running
       password: 1234 #password of the config-service
       username: user #username of the config-service
       fail-fast: true #the service will not run if it can't reach the config-service

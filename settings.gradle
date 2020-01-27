@@ -6,4 +6,5 @@ include 'Portal-Registry'
 include 'Portal-Gateway'
 include 'Portal-Commons'
 include 'Portal-Calories'
+include 'Docker'
 

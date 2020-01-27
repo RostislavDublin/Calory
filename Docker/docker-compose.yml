@@ -1,0 +1,58 @@
+version: '3'
+services:
+  calory-portal-config:
+    container_name: calory-portal-config
+    image: rdublin/calory/calory-portal-config:0.1.0
+    restart: always
+    ports:
+      - "9888:8888"
+    volumes:
+      - /Users/rostislav/IdeaProjects/Toptal/Calory/Docker/shared/:/app/shared
+    environment:
+      "spring.profiles.active": native
+      "spring.cloud.config.server.native.searchLocations": classpath:/shared,file:/app/shared
+
+  calory-portal-registry:
+    container_name: calory-portal-registry
+    image: rdublin/calory/calory-portal-registry:0.1.0
+    restart: always
+    ports:
+      - "9761:8761"
+    environment:
+      SPRING_CLOUD_CONFIG_URI: http://calory-portal-config:8888
+    depends_on:
+      - calory-portal-config
+  calory-portal-gateway:
+    container_name: calory-portal-gateway
+    image: rdublin/calory/calory-portal-gateway:0.1.0
+    restart: always
+    ports:
+      - "9080:8080"
+    environment:
+      SPRING_CLOUD_CONFIG_URI: http://calory-portal-config:8888
+    depends_on:
+      - calory-portal-config
+      - calory-portal-registry
+
+
+#  wallet-mysql:
+#    container_name: calory-portal-mysql
+#    image: mysql/mysql-server:5.7
+#    environment:
+#      MYSQL_DATABASE: wallet
+#      MYSQL_ROOT_PASSWORD: 123456Qw
+#      MYSQL_ROOT_HOST: '%'
+#    ports:
+#      - "3307:3306"
+#    restart: always
+
+#  wallet-client:
+#    container_name: wallet-client
+#    image: rdublin/wallet/wallet-client:1.0-SNAPSHOT
+#    environment:
+#      WALLET_SERVER_ADDRESS: wallet-server
+#    restart: always
+#    stdin_open: true
+#    tty: true
+#    depends_on:
+#      - wallet-server

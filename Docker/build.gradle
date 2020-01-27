@@ -1,0 +1,96 @@
+
+plugins {
+    id 'com.bmuschko.docker-remote-api' version '6.1.3'
+    id 'com.avast.gradle.docker-compose' version '0.10.7'
+}
+
+import com.bmuschko.gradle.docker.tasks.container.DockerCreateContainer
+import com.bmuschko.gradle.docker.tasks.container.DockerStartContainer
+import com.bmuschko.gradle.docker.tasks.container.DockerRemoveContainer
+import com.bmuschko.gradle.docker.tasks.container.DockerStopContainer
+import com.bmuschko.gradle.docker.tasks.image.DockerBuildImage
+import com.bmuschko.gradle.docker.tasks.image.DockerRemoveImage
+import com.bmuschko.gradle.docker.tasks.image.Dockerfile
+
+tasks.findAll({ t -> t.name.startsWith("compose") }).each { t -> t.group = "docker-compose" }
+dockerCompose {
+    useComposeFiles = ['docker-compose.yml']
+}
+
+def dockerBuildDir = 'build/'
+
+def createDockerTasks(String moduleName, String dockerBuildDir) {
+    Project module = project(":$moduleName");
+    Task jarTask = ((Jar) (module.getTasksByName("jar", false))[0])
+    File archiveFile = jarTask.archiveFile.get().asFile
+    def imageId = "rdublin/calory/calory-${moduleName.toLowerCase()}:${jarTask.archiveVersion.get()}"
+    String uniqueContainerName = "calory-${moduleName.toLowerCase()}"
+
+    Task createDockerFile = tasks.create("${moduleName}-createDockerfile", Dockerfile) {
+        destFile = project.file(dockerBuildDir + "/${moduleName}/Dockerfile")
+        from 'openjdk:8-jre-alpine'
+        instruction('LABEL maintainer="Rostislav Dublin<crm_guru@mail.ru>"')
+        copyFile "${archiveFile.getAbsoluteFile().name}", "/app/${moduleName}.jar"
+        entryPoint 'java'
+        defaultCommand '-jar', "/app/${moduleName}.jar"
+    }.group('docker-image')
+
+    Task syncJar = tasks.create("${moduleName}-syncJar", Copy) {
+        dependsOn ":${moduleName}:assemble"
+        from archiveFile
+        into "$dockerBuildDir/${moduleName}"
+    }.group('docker-image')
+
+    Task buildImage = tasks.create("${moduleName}-buildImage", DockerBuildImage) {
+        dependsOn "${moduleName}-createDockerfile", "${moduleName}-syncJar"
+        inputDir = project.file("$dockerBuildDir/$moduleName")
+        dockerFile = project.file("$dockerBuildDir/$moduleName/Dockerfile")
+        images = [imageId]
+    }.group('docker-image')
+
+    Task stopContainer = tasks.create("${moduleName}-stopContainer", DockerStopContainer) {
+        targetContainerId("$uniqueContainerName")
+        onError { exc ->
+            if (exc.message != null && !exc.class.name.contains('NotFoundException')) {
+                throw new RuntimeException(exc)
+            } else {
+                println ". " + exc.message;
+            }
+        }
+    }.group('docker-container')
+
+    Task removeContainer = tasks.create("${moduleName}-removeContainer", DockerRemoveContainer) {
+        dependsOn "${moduleName}-stopContainer"
+        targetContainerId("$uniqueContainerName")
+        onError { exc ->
+            if (exc.message != null && !exc.class.name.contains('NotFoundException')) {
+                throw new RuntimeException(exc)
+            } else {
+                println ". " + exc.message;
+            }
+        }
+    }.group('docker-container')
+
+    Task createContainer = tasks.create("${moduleName}-createContainer", DockerCreateContainer) {
+        dependsOn "${moduleName}-removeContainer", "${moduleName}-buildImage"
+        containerName = "$uniqueContainerName"
+        targetImageId(imageId)
+        //portBindings = ['6565:6565']
+    }.group('docker-container')
+
+    Task startContainer = tasks.create("${moduleName}-startContainer", DockerStartContainer) {
+        dependsOn "${moduleName}-createContainer"
+        targetContainerId("$uniqueContainerName")
+    }.group('docker-container')
+
+    Task removeImage = tasks.create("${moduleName}-removeImage", DockerRemoveImage) {
+        dependsOn "${moduleName}-removeContainer"
+        targetImageId(imageId)
+    }.group('docker-image')
+
+}
+
+createDockerTasks('Portal-Config', dockerBuildDir)
+createDockerTasks('Portal-Registry', dockerBuildDir)
+createDockerTasks('Portal-Gateway', dockerBuildDir)
+

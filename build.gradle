@@ -21,7 +21,7 @@ ext {
     springCloudVersion = 'Hoxton.RELEASE'
 }
 
-configure(subprojects) {
+configure(subprojects.findAll { it.name != 'Docker' }) {
 
     repositories {
         mavenLocal()
