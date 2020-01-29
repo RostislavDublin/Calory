@@ -1,0 +1,3 @@
+spring:
+  datasource:
+    url: "jdbc:mysql://calory-portal-auth-mysql:3306/calory_portal_auth"

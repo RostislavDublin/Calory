@@ -93,4 +93,7 @@ def createDockerTasks(String moduleName, String dockerBuildDir) {
 createDockerTasks('Portal-Config', dockerBuildDir)
 createDockerTasks('Portal-Registry', dockerBuildDir)
 createDockerTasks('Portal-Gateway', dockerBuildDir)
+createDockerTasks('Portal-Auth', dockerBuildDir)
+createDockerTasks('Portal-Calories', dockerBuildDir)
+createDockerTasks('Portal-UI', dockerBuildDir)
 

@@ -1,7 +1,7 @@
 version: '3'
 services:
   calory-portal-config:
-    container_name: calory-portal-config
+    container_name: calory-portal-config-1
     image: rdublin/calory/calory-portal-config:0.1.0
     restart: always
     ports:
@@ -13,7 +13,7 @@ services:
       "spring.cloud.config.server.native.searchLocations": classpath:/shared,file:/app/shared
 
   calory-portal-registry:
-    container_name: calory-portal-registry
+    container_name: calory-portal-registry-1
     image: rdublin/calory/calory-portal-registry:0.1.0
     restart: always
     ports:
@@ -23,7 +23,7 @@ services:
     depends_on:
       - calory-portal-config
   calory-portal-gateway:
-    container_name: calory-portal-gateway
+    container_name: calory-portal-gateway-1
     image: rdublin/calory/calory-portal-gateway:0.1.0
     restart: always
     ports:
@@ -34,25 +34,58 @@ services:
       - calory-portal-config
       - calory-portal-registry
 
+  calory-portal-auth-mysql:
+    container_name: calory-portal-auth-mysql-1
+    image: mysql/mysql-server:5.7
+    environment:
+      MYSQL_DATABASE: calory_portal_auth
+      MYSQL_ROOT_PASSWORD: 123456Qw
+      MYSQL_ROOT_HOST: '%'
+    ports:
+      - "9306:3306"
+    restart: always
+  calory-portal-auth:
+    container_name: calory-portal-auth-1
+    image: rdublin/calory/calory-portal-auth:0.1.0
+    restart: always
+    ports:
+      - "9082:8082"
+    environment:
+      SPRING_CLOUD_CONFIG_URI: http://calory-portal-config:8888
+    depends_on:
+      - calory-portal-config
+      - calory-portal-auth-mysql
 
-#  wallet-mysql:
-#    container_name: calory-portal-mysql
-#    image: mysql/mysql-server:5.7
-#    environment:
-#      MYSQL_DATABASE: wallet
-#      MYSQL_ROOT_PASSWORD: 123456Qw
-#      MYSQL_ROOT_HOST: '%'
-#    ports:
-#      - "3307:3306"
-#    restart: always
+  calory-portal-calories-mysql:
+    container_name: calory-portal-calories-mysql-1
+    image: mysql/mysql-server:5.7
+    environment:
+      MYSQL_DATABASE: calory_portal_calories
+      MYSQL_ROOT_PASSWORD: 123456Qw
+      MYSQL_ROOT_HOST: '%'
+    ports:
+      - "9307:3306"
+    restart: always
+  calory-portal-calories:
+    container_name: calory-portal-calories-1
+    image: rdublin/calory/calory-portal-calories:0.1.0
+    restart: always
+    ports:
+      - "9084:8084"
+    environment:
+      SPRING_CLOUD_CONFIG_URI: http://calory-portal-config:8888
+    depends_on:
+      - calory-portal-config
+      - calory-portal-calories-mysql
 
-#  wallet-client:
-#    container_name: wallet-client
-#    image: rdublin/wallet/wallet-client:1.0-SNAPSHOT
-#    environment:
-#      WALLET_SERVER_ADDRESS: wallet-server
-#    restart: always
-#    stdin_open: true
-#    tty: true
-#    depends_on:
-#      - wallet-server
+  calory-portal-ui:
+    container_name: calory-portal-ui-1
+    image: rdublin/calory/calory-portal-ui:0.1.0
+    restart: always
+    ports:
+      - "9081:8081"
+    environment:
+      SPRING_CLOUD_CONFIG_URI: http://calory-portal-config:8888
+    depends_on:
+      - calory-portal-config
+
