@@ -35,21 +35,13 @@ export class MealService {
         params = params.set('timeTo', filterValues.get('timeTo'));
       }
     }
-    return this.http.get<any>(this.mealsUrl, {params: params})
-      .pipe(map(w => {
-        const meals: Meal[] = w;
-        return meals;
-      }));
+    return this.http.get<Meal[]>(this.mealsUrl, {params: params});
   }
 
   getCurrentUserMeals(): Observable<Meal[]> {
     const currentUserId = this.authenticationService.getLoggedInUserId();
     const params = new HttpParams().set('userId', currentUserId.toString());
-    return this.http.get<any>(this.mealsUrl, {params})
-      .pipe(map(w => {
-        const meals: Meal[] = w;
-        return meals;
-      }));
+    return this.http.get<Meal[]>(this.mealsUrl, {params});
   }
 
   public save(meal: Meal) {

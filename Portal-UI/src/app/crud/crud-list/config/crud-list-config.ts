@@ -1,12 +1,12 @@
 import {CrudListColumnConfig} from './crud-list-column-config';
-import {Observable, Subject} from 'rxjs';
+import {Observable, Subject, Subscriber} from 'rxjs';
 import {CrudDialogConfig} from '../../crud-dialog/config/crud-dialog-config';
 import {CrudListFilterConfig} from "./crud-list-filter-config";
 
 export class CrudListConfig<T> {
 
   private _listTitle: string = "Item List";
-  private _itemName: string = "Item";
+  private _itemTitle: string = "Item";
 
   private _columns: CrudListColumnConfig[];
   private _filters: CrudListFilterConfig[] = [];
@@ -19,10 +19,19 @@ export class CrudListConfig<T> {
   /**
    * Async data subject (both Observable and observer). Allows to subscribe on data updates and also to provide new data.
    */
-  private _asyncData: Subject<T[]> = new Subject<T[]>();
+  // private _asyncData: Subject<T[]> = new Subject<T[]>();
   /**
    * Async data supplier. Something that can be triggered to request new data and put it to the _asyncData stream.
    */
+
+  private _asyncDataSubscriberSuppliers: (() => Subscriber<T[]>)[] = new Array<() => Subscriber<T[]>>();
+
+  public addAsyncDataSubscriberSupplier(subscriberSupplier: () => Subscriber<T[]>) {
+    if (this._asyncDataSubscriberSuppliers.indexOf(subscriberSupplier) === -1) {
+      this._asyncDataSubscriberSuppliers.push(subscriberSupplier);
+    }
+  }
+
   private _asyncDataSupplier: (filterValues?: {}) => Observable<T[]> = null;
 
   /**
@@ -33,18 +42,23 @@ export class CrudListConfig<T> {
 
   constructor(construct: {
     listTitle: string,
+    itemTitle?: string,
     columns: CrudListColumnConfig[],
     filters?: CrudListFilterConfig[],
     data: T[],
   }) {
     this._listTitle = construct.listTitle;
+
+    this._itemTitle = construct.itemTitle;
+    this.crudDialogConfig.itemTitle = construct.itemTitle;
+
     this._columns = construct.columns;
     this._data = construct.data;
 
     //when async data arrive, it put into the collection
-    this._asyncData.subscribe(next => {
-      this._data = next;
-    });
+    // this._asyncData.subscribe(next => {
+    //   this._data = next;
+    // });
 
     if (construct.filters) {
       this._filters = construct.filters;
@@ -55,12 +69,12 @@ export class CrudListConfig<T> {
     }
   }
 
-  get itemName(): string {
-    return this._itemName;
+  get itemTitle(): string {
+    return this._itemTitle;
   }
 
-  set itemName(value: string) {
-    this._itemName = value;
+  set itemTitle(value: string) {
+    this._itemTitle = value;
   }
 
   get columns(): CrudListColumnConfig[] {
@@ -89,15 +103,16 @@ export class CrudListConfig<T> {
     return this._data;
   }
 
-  get asyncData(): Subject<T[]> {
-    return this._asyncData;
-  }
+  // get asyncData(): Subject<T[]> {
+  //   return this._asyncData;
+  // }
 
   private _crudDialogConfig: CrudDialogConfig = new CrudDialogConfig();
 
   getFilters() {
     return this._filters;
   }
+
   getFilterById(id: string): CrudListFilterConfig {
     return this._filterIdToFilterMap.get(id);
   }
@@ -116,10 +131,20 @@ export class CrudListConfig<T> {
 
 
   requestAsyncDataFromSupplier(): void {
+
+    const asyncData = new Subject<T[]>();
+
+    //subscribe/restore all registered subscribers.
+    for (const supplier of this._asyncDataSubscriberSuppliers) {
+      asyncData.subscribe(supplier());
+    }
+
     this._asyncDataSupplier(this.getFilterValues())
       .subscribe(next => {
-        this._asyncData.next(next);
-      });
+        asyncData.next(next);
+      }, error => {
+        asyncData.error(error);
+      }, () => console.log("completed - requestAsyncDataFromSupplier"));
   }
 
   getColumnIds(): string[] {

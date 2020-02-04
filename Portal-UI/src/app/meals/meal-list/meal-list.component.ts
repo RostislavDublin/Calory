@@ -27,6 +27,7 @@ export class MealListComponent {
 
   mealListConfig: CrudListConfig<Meal> = new CrudListConfig({
       listTitle: 'Meal List',
+      itemTitle: 'Meal',
       columns: [
         new CrudListColumnConfig({id: 'id', name: 'Id'}),
         //{id: 'userId', name: 'UserId'},
@@ -40,7 +41,7 @@ export class MealListComponent {
         new CrudListFilterConfig({
             id: 'userId', name: 'User', inputType: 'select',
             initialValue: this.authenticationService.getLoggedInUserId(),
-            optionsData: this.usersFilterOptions
+            optionsData: this.usersFilterOptions,
           }
         ),
         new CrudListFilterConfig({
@@ -56,8 +57,6 @@ export class MealListComponent {
     }
   );
 
-
-  //this.userService.getUsersAccessibleToLoggedInUser().toPromise().then(r => {});
 
   constructor(
     private authenticationService: AuthenticationService,
@@ -77,7 +76,6 @@ export class MealListComponent {
       this.usersFilterOptions[authenticationService.getLoggedInUserId()] = authenticationService.getLoggedInUserName()
     }
 
-    this.mealListConfig.itemName = "Meal";
     this.mealListConfig.asyncDataSupplier = (filterValues) => {
       return mealService.getMeals(filterValues).pipe(map(mm => {
         mm.forEach(m => {
@@ -93,7 +91,6 @@ export class MealListComponent {
     }
 
     const dialogConfig = this.mealListConfig.crudDialogConfig;
-
     dialogConfig.fields = [
       //Meal record Id
       new CrudDialogFieldConfig({id: 'id', placeholder: 'Id', disabled: true, inputClass: () => 'invisible'}),
@@ -150,9 +147,5 @@ export class MealListComponent {
     dialogConfig.createHandler = whatToSubmit => this.mealService.save(whatToSubmit);
     dialogConfig.updateHandler = whatToSubmit => this.mealService.update(whatToSubmit);
     dialogConfig.deleteHandler = whatToSubmit => this.mealService.delete(whatToSubmit);
-  }
-
-  onRefreshButtonClick() {
-    this.mealListConfig.requestAsyncDataFromSupplier();
   }
 }

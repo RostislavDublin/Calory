@@ -30,14 +30,18 @@ export class AuthInterceptorService implements HttpInterceptor {
       },
       (err: any) => {
         if (err instanceof HttpErrorResponse) {
-          if (err.status !== 401) {
+          // 401 Unauthorized
+          if (err.status === 401) {
+            // close any open matDialogues (cause they block redirects)
+            this.dialogRef.closeAll();
+            // navigate to the login page
+            this.router.navigate(['login'], {queryParams: {returnUrl: this.router.url}});
             return;
           }
-          // close any open matDialogues (cause they block redirects)
-          this.dialogRef.closeAll();
-          // navigate to the login page
-          this.router.navigate(['login'], {queryParams: {returnUrl: this.router.url}});
+          // any other HttpErrorResponse error
+          return;
         }
+        //any other error
       }));
   }
 }

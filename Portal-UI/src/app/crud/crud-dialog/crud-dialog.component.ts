@@ -1,5 +1,5 @@
 import {Component, Inject, OnInit} from '@angular/core';
-import {FormBuilder, FormGroup, Validators} from '@angular/forms';
+import {FormBuilder, FormGroup} from '@angular/forms';
 import {MAT_DIALOG_DATA, MatDialogRef} from '@angular/material/dialog';
 import {CrudMode} from '../crud-mode.enum';
 import {CrudDialogConfig} from './config/crud-dialog-config';
@@ -16,12 +16,12 @@ export class CrudDialogComponent implements OnInit {
   CRUD_MODES = CrudMode;
   crudForm: FormGroup;
   crudTitle: string;
-
-  private crudDialogConfig: CrudDialogConfig;
+  crudSubTitle: string;
+  crudDialogErrors: string[] = [];
 
   constructor(
     private dialogRef: MatDialogRef<CrudDialogComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: any,
+    @Inject(MAT_DIALOG_DATA)private crudDialogConfig: CrudDialogConfig,
     public fb: FormBuilder,
   ) {
   }
@@ -35,8 +35,6 @@ export class CrudDialogComponent implements OnInit {
 
   private initForm() {
 
-    this.crudDialogConfig = this.data;
-
     const controlsConfig = {};
     const item = this.crudDialogConfig.item;
     for (const field of this.crudDialogConfig.fields) {
@@ -49,16 +47,16 @@ export class CrudDialogComponent implements OnInit {
 
     switch (this.crudDialogConfig.crudMode) {
       case CrudMode.Create:
-        this.crudTitle = 'Add Item';
+        this.crudTitle = 'Add '+ this.crudDialogConfig.itemTitle;
         break;
       case CrudMode.Read:
-        this.crudTitle = 'View Item';
+        this.crudTitle = 'View '+ this.crudDialogConfig.itemTitle;
         break;
       case CrudMode.Update:
-        this.crudTitle = 'Edit Item';
+        this.crudTitle = 'Edit '+ this.crudDialogConfig.itemTitle;
         break;
       case CrudMode.Delete:
-        this.crudTitle = 'Delete Item';
+        this.crudTitle = 'Delete '+ this.crudDialogConfig.itemTitle;
 
         break;
     }
@@ -97,19 +95,28 @@ export class CrudDialogComponent implements OnInit {
     if (this.findInvalidControls().length === 0) {
       const itemToSubmit = this.crudForm.getRawValue();
 
-      this.crudDialogConfig.submitter(this.crudDialogConfig.crudMode, itemToSubmit).subscribe(this.submitDialogSubscriber);
+      this.crudDialogConfig
+        .submitter(this.crudDialogConfig.crudMode, itemToSubmit)
+        .subscribe(this.submitDialogSubscriber);
 
     }
   }
 
   submitDialogSubscriber: PartialObserver<any> = {
     next: (result) => {
+      this.crudDialogErrors = [];
       this.dialogRef.close();
     },
     error: error => {
       if (error instanceof HttpErrorResponse) {
-        console.log('Status: %d, message: %s', error.error.status, error.error.message);
-        //this.crudForm.get('name').setErrors({notUnique: true});
+        console.log('Status: %d, message: %s', error.status, error.message);
+        if(error.status === 0) {
+          this.crudDialogErrors = ["SERVER UNAVAILABLE: " + error.message];
+        } else{
+          this.crudDialogErrors = [error.message];
+        }
+      } else {
+        this.crudDialogErrors = [error];
       }
     }
   };

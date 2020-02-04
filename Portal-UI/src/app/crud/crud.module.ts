@@ -7,6 +7,7 @@ import {TestChildComponent} from '../test/test-child/test-child.component';
 import {CrudDialogComponent} from './crud-dialog/crud-dialog.component';
 import {ReactiveFormsModule} from '@angular/forms';
 import {MatSelectModule} from "@angular/material/select";
+import {FlexModule} from "@angular/flex-layout";
 
 @NgModule({
   declarations: [CrudListComponent, TestParentComponent, TestChildComponent, CrudDialogComponent],
@@ -14,12 +15,13 @@ import {MatSelectModule} from "@angular/material/select";
     CrudListComponent,
     CrudDialogComponent
   ],
-  imports: [
-    CommonModule,
-    MaterialModule,
-    ReactiveFormsModule,
-    MatSelectModule
-  ],
+    imports: [
+        CommonModule,
+        MaterialModule,
+        ReactiveFormsModule,
+        MatSelectModule,
+        FlexModule
+    ],
   entryComponents: [CrudDialogComponent]
 })
 export class CrudModule {

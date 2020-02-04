@@ -1,6 +1,40 @@
-.invisible{
+.invisible {
   display: block;
   visibility: hidden;
   height: 0;
   width: 0;
+}
+
+::ng-deep .crud-dialog-panel > mat-dialog-container {
+  padding: 0;
+}
+
+::ng-deep .mat-card {
+  padding: 10px;
+}
+
+::ng-deep .mat-card-actions,
+::ng-deep .mat-card-actions:last-child,
+::ng-deep .mat-card > .mat-card-actions:last-child {
+  margin: 0;
+  margin-bottom: 0;
+}
+
+div.crud-dialog-error-section{
+  border-radius: 3px;
+  margin: 0 -5px 5px -5px;
+  padding: 5px;
+  background: mistyrose;
+  color: #f44336;
+}
+mat-list.crud-dialog-error-list{
+  /*background: mistyrose;*/
+}
+mat-list.crud-dialog-error-list > mat-list-item.crud-dialog-error-list-item {
+  height: auto;
+  color: #f44336;
+}
+
+::ng-deep mat-list.crud-dialog-error-list > mat-list-item.crud-dialog-error-list-item > div.mat-list-item-content {
+  padding-left: 0 !important;
 }

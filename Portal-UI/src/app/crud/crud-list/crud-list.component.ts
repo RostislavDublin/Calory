@@ -1,4 +1,12 @@
-import {ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnInit, ViewChild} from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+  Component,
+  Input,
+  OnInit,
+  TemplateRef,
+  ViewChild
+} from '@angular/core';
 import {CrudListConfig} from './config/crud-list-config';
 import {MatTable, MatTableDataSource} from '@angular/material/table';
 import {MatPaginator} from '@angular/material/paginator';
@@ -9,6 +17,8 @@ import {MatDialog, MatDialogConfig} from '@angular/material/dialog';
 import {CrudDialogComponent} from '../crud-dialog/crud-dialog.component';
 import {CrudDialogConfig} from '../crud-dialog/config/crud-dialog-config';
 import {CrudMode} from '../crud-mode.enum';
+import {HttpErrorResponse} from "@angular/common/http";
+import {Subscriber} from "rxjs";
 
 @Component({
   selector: 'app-crud-list',
@@ -18,12 +28,46 @@ import {CrudMode} from '../crud-mode.enum';
 })
 export class CrudListComponent<T> implements OnInit {
 
+  /**
+   * This supplier knows how to (re)generate a subscriber, which knows how to populate the CRUD-list by fresh data.
+   * We feed this supplier to the CrudListConfig, which subscribes it to its internal asyncDataSupplier.
+   */
+  private subscriberSupplier: () => Subscriber<T[]> = () => {
+    const subscriber = new Subscriber<T[]>(
+      (next) => {
+        this.dataSource.data = next;
+      }, error => {
+        if (error instanceof HttpErrorResponse) {
+          console.log('Status: %d, message: %s', error.status, error.message);
+          if (error.status === 0) {
+            this.errorDialogCaption = 'SERVER UNAVAILABLE';
+            this.errorDialogContent = error.message;
+          } else {
+            this.errorDialogCaption = 'ERROR';
+            this.errorDialogContent = error.message;
+          }
+        } else {
+          this.errorDialogCaption = 'ERROR';
+          this.errorDialogContent = error;
+        }
+
+        this.dialog1.open(this.errorDialog);
+      }
+    );
+    subscriber.add(ss => {
+      console.log("Subscription teardown: " + ss);
+    })
+    return subscriber;
+  }
+
   constructor(
     public dialog: MatDialog,
+    public dialog1: MatDialog,
     private cdref: ChangeDetectorRef
   ) {
     console.log('CRUD list constructor');
   }
+
 
   @Input() private config: CrudListConfig<T>;
 
@@ -45,9 +89,9 @@ export class CrudListComponent<T> implements OnInit {
 
     this.dataSource.paginator = this.paginator;
     this.dataSource.data = this.config.data;
-    this.config.asyncData.subscribe(next => {
-      this.dataSource.data = next;
-    });
+
+    this.config.addAsyncDataSubscriberSupplier(this.subscriberSupplier);
+
     this.config.requestAsyncDataFromSupplier();
 
     this.dataSource.sort = this.sort;
@@ -92,7 +136,8 @@ export class CrudListComponent<T> implements OnInit {
     matDialogConfig.disableClose = true;
     matDialogConfig.autoFocus = true;
     matDialogConfig.data = this.config.crudDialogConfig.setModeAndItem(crudMode, item);
-    matDialogConfig.width = '500px';
+    matDialogConfig.width = this.config.crudDialogConfig.width;
+    matDialogConfig.panelClass = "crud-dialog-panel"
 
     const dialogRef = this.dialog.open(CrudDialogComponent, matDialogConfig);
 
@@ -115,5 +160,14 @@ export class CrudListComponent<T> implements OnInit {
   ngAfterContentChecked() {
     this.cdref.detectChanges();
   }
+
+  @ViewChild('errorDialog', {static: false}) errorDialog: TemplateRef<any>;
+  private errorDialogCaption: string;
+  private errorDialogContent: string;
+
+  onRefreshButtonClick() {
+    this.config.requestAsyncDataFromSupplier();
+  }
+
 
 }
