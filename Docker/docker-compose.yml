@@ -7,7 +7,7 @@ services:
     ports:
       - "9888:8888"
     volumes:
-      - /Users/rostislav/IdeaProjects/Toptal/Calory/Docker/shared/:/app/shared
+      - ./resources/calory-portal-config/shared/:/app/shared
     environment:
       "spring.profiles.active": native
       "spring.cloud.config.server.native.searchLocations": classpath:/shared,file:/app/shared
@@ -84,6 +84,8 @@ services:
     restart: always
     ports:
       - "9081:8081"
+    volumes:
+      - ./resources/calory-portal-ui/env.js:/app/resources/env.js
     environment:
       SPRING_CLOUD_CONFIG_URI: http://calory-portal-config:8888
     depends_on:

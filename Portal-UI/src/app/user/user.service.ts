@@ -2,9 +2,9 @@ import {Injectable} from '@angular/core';
 import {HttpClient} from '@angular/common/http';
 import {EMPTY, Observable} from 'rxjs';
 import {User} from '../model/user';
-import {environment} from '../../environments/environment';
 import {map, publishReplay, refCount} from "rxjs/operators";
 import {AuthenticationService} from "../login/authentication.service";
+import {EnvService} from "../config/env/env.service";
 
 @Injectable({
   providedIn: 'root'
@@ -16,10 +16,11 @@ export class UserService {
   private usersUrl: string;
 
   constructor(
+    private env: EnvService,
     private http: HttpClient,
     private authenticationService: AuthenticationService
   ) {
-    this.usersUrl = environment.apiGatewayUrl + '/auth/users';
+    this.usersUrl = this.env.apiGatewayUrl + '/auth/users';
   }
 
   getUsers(): Observable<User[]> {

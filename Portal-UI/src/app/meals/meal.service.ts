@@ -3,16 +3,16 @@ import {Observable} from 'rxjs';
 import {HttpClient, HttpParams} from '@angular/common/http';
 import {Meal} from '../model/meal';
 import {AuthenticationService} from '../login/authentication.service';
-import {environment} from '../../environments/environment';
-import {map} from 'rxjs/operators';
+import {EnvService} from "../config/env/env.service";
 
 @Injectable({
   providedIn: 'root'
 })
 export class MealService {
-  private mealsUrl: string = environment.apiGatewayUrl + '/calories/meals';
+  private mealsUrl: string = this.env.apiGatewayUrl + '/calories/meals';
 
   constructor(
+    private env: EnvService,
     private http: HttpClient,
     private authenticationService: AuthenticationService) {
   }

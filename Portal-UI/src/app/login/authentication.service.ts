@@ -3,14 +3,14 @@ import {HttpClient, HttpHeaders, HttpParams} from '@angular/common/http';
 import {ActivatedRouteSnapshot, CanActivate, Router, RouterStateSnapshot} from '@angular/router';
 import {BehaviorSubject, Observable} from 'rxjs';
 import * as jwt_decode from 'jwt-decode';
-import {environment} from '../../environments/environment';
+import {EnvService} from "../config/env/env.service";
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuthenticationService implements CanActivate {
 
-  public static TOKEN_GET_PATH = environment.apiGatewayUrl + '/auth/oauth/token';
+  public TOKEN_GET_PATH = this.env.apiGatewayUrl + '/auth/oauth/token';
   public static USER_ID_KEY = 'authenticatedUserId';
   public static USER_NAME_KEY = 'authenticatedUserName';
   public static USER_AUTHORITIES_KEY = 'authenticatedUserAuthorities';
@@ -25,6 +25,7 @@ export class AuthenticationService implements CanActivate {
   isLoginSubject = new BehaviorSubject<boolean>(this.isUserLoggedIn());
 
   constructor(
+    private env: EnvService,
     private http: HttpClient,
     private router: Router
   ) {
@@ -48,7 +49,7 @@ export class AuthenticationService implements CanActivate {
       });
 
       const options = {headers};
-      this.http.post(AuthenticationService.TOKEN_GET_PATH, params.toString(), options)
+      this.http.post(this.TOKEN_GET_PATH, params.toString(), options)
         .subscribe(data => {
           this.setAuthToken(data);
           observer.next(data);

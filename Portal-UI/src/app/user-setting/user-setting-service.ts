@@ -2,17 +2,18 @@ import {Injectable} from '@angular/core';
 import {Observable} from 'rxjs';
 import {HttpClient} from '@angular/common/http';
 import {AuthenticationService} from '../login/authentication.service';
-import {environment} from '../../environments/environment';
 import {map} from 'rxjs/operators';
 import {UserSetting} from "./user-setting";
+import {EnvService} from "../config/env/env.service";
 
 @Injectable({
   providedIn: 'root'
 })
 export class UserSettingService {
-  private userSettingUrl: string = environment.apiGatewayUrl + '/calories/userSettings';
+  private userSettingUrl: string = this.env.apiGatewayUrl + '/calories/userSettings';
 
   constructor(
+    private env: EnvService,
     private http: HttpClient,
     private authenticationService: AuthenticationService) {
   }

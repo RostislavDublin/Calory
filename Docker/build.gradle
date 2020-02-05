@@ -31,6 +31,7 @@ def createDockerTasks(String moduleName, String dockerBuildDir) {
         from 'openjdk:8-jre-alpine'
         instruction('LABEL maintainer="Rostislav Dublin<crm_guru@mail.ru>"')
         copyFile "${archiveFile.getAbsoluteFile().name}", "/app/${moduleName}.jar"
+        workingDir('/app')
         entryPoint 'java'
         defaultCommand '-jar', "/app/${moduleName}.jar"
     }.group('docker-image')
@@ -46,7 +47,7 @@ def createDockerTasks(String moduleName, String dockerBuildDir) {
         inputDir = project.file("$dockerBuildDir/$moduleName")
         dockerFile = project.file("$dockerBuildDir/$moduleName/Dockerfile")
         images = [imageId]
-    }.group('docker-image')
+    }.group('docker-image-build')
 
     Task stopContainer = tasks.create("${moduleName}-stopContainer", DockerStopContainer) {
         targetContainerId("$uniqueContainerName")
