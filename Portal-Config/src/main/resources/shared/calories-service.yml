@@ -1,12 +1,6 @@
 server:
   port: 8084
 
-#CORS
-portal:
-  allow-origin:
-    - "http://localhost:8081"
-    - "http://localhost:8080"
-
 spring:
   jpa:
     database-platform: "org.hibernate.dialect.MySQL5InnoDBDialect"

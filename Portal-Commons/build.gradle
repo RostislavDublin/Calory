@@ -1,9 +1,6 @@
 plugins {
     id 'java-library'
-//    id "org.springframework.boot" apply false
 }
-
-//apply plugin: 'io.spring.dependency-management'
 
 dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'

@@ -6,10 +6,8 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
-import rdublin.portal.config.PortalProperties;
 
 @SpringBootApplication
-@EnableConfigurationProperties({PortalProperties.class})
 @EnableJpaAuditing
 public class AuthServiceApplication {
     private static final Logger LOGGER = LoggerFactory.getLogger(AuthServiceApplication.class);
